@@ -1,14 +1,14 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
-from visualization.predictions.prediction_options import PredictionOptions
-from visualization.predictions.prediction_info import PredictionInfo
-from visualization.plot import MainPage
-from visualization.plot import check_args, get_args
+from epviz.predictions.prediction_options import PredictionOptions
+from epviz.predictions.prediction_info import PredictionInfo
+from epviz.plot import MainPage
+from epviz.plot import check_args, get_args
 
 import torch
 import numpy as np
@@ -24,7 +24,7 @@ class TestPrediction(unittest.TestCase):
         self.TEST_PREDS_MULTICLASS = "test_files/chb_multiclass.pt"
         self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
         self.TEST_PREDS_MULTI_CLASS_CHN = "test_files/chb_multiclass_multichannel.pt"
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.parent = MainPage(args, app)

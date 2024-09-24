@@ -1,10 +1,10 @@
 """ Module for testing the edf loader """
 import sys
 import numpy as np
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
-from visualization.preprocessing.edf_loader import EdfLoader, _check_label
-from visualization.preprocessing.eeg_info import EegInfo
+from epviz.preprocessing.edf_loader import EdfLoader, _check_label
+from epviz.preprocessing.eeg_info import EegInfo
 import pyedflib
 
 class TestEdfLoader(unittest.TestCase):

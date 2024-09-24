@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'visualization/ui_files/saveImg.ui'
+# Form implementation generated from reading ui file 'epviz/ui_files/saveImg.ui'
 #
 # Created by: PyQt5 UI code generator 5.10.1
 #

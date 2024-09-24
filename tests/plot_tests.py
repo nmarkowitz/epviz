@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
-sys.path.append('visualization')
+sys.path.append('epviz')
 from signal_loading.channel_options import ChannelOptions
 from signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
 from predictions.prediction_options import PredictionOptions
@@ -29,7 +29,7 @@ class TestPlot(unittest.TestCase):
         self.TEST_PREDS_MULTICLASS = "test_files/chb_multiclass.pt"
         self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
         self.TEST_PREDS_MULTI_CLASS_CHN = "test_files/chb_multiclass_multichannel.pt"
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.plot_window = MainPage(args, app)

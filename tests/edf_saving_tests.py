@@ -1,15 +1,15 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QDate, QTime
-from visualization.edf_saving.saveEdf_options import SaveEdfOptions
-from visualization.edf_saving.saveEdf_info import SaveEdfInfo
-from visualization.edf_saving.anonymizer import Anonymizer, _valid_date
-from visualization.plot import MainPage
-from visualization.plot import check_args, get_args
+from epviz.edf_saving.saveEdf_options import SaveEdfOptions
+from epviz.edf_saving.saveEdf_info import SaveEdfInfo
+from epviz.edf_saving.anonymizer import Anonymizer, _valid_date
+from epviz.plot import MainPage
+from epviz.plot import check_args, get_args
 
 import datetime
 
@@ -18,7 +18,7 @@ class TestEdfSaving(unittest.TestCase):
     def setUp(self):
         self.TEST_FN = "test_files/chb.edf"
         self.test_save_fn = "test_files/test0.edf"
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.parent = MainPage(args, app)

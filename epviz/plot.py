@@ -5,25 +5,15 @@ import sys
 import os
 
 from .signal_loading import ChannelInfo, ChannelOptions
-
 from .filtering import FilterOptions, FilterInfo
-
 from .predictions import PredictionOptions, PredictionInfo
-
 from .spectrogram_window import SpecOptions, SpecInfo
-
 from .image_saving import SaveImgInfo, SaveImgOptions, SaveTopoplotOptions
-
-# from .edf_saving.saveEdf_info import SaveEdfInfo
-# from .edf_saving.saveEdf_options import SaveEdfOptions
 from .edf_saving import SaveEdfInfo, SaveEdfOptions
-
-# from .signal_stats.signalStats_info import SignalStatsInfo
-# from .signal_stats.signalStats_options import SignalStatsOptions
 from .signal_stats import SignalStatsInfo, SignalStatsOptions
 
 import pyedflib
-from plot_utils import check_annotations, filter_data, convert_from_count, get_time
+from .plot_utils import check_annotations, filter_data, convert_from_count, get_time
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import (
@@ -44,7 +34,7 @@ from PyQt5.QtGui import QBrush, QColor, QPen, QFont, QDesktopServices
 import pyqtgraph as pg
 from pyqtgraph.dockarea import *
 
-from preprocessing.edf_loader import *
+from .preprocessing import EdfLoader
 from scipy import signal
 
 from pkg_resources import resource_filename
@@ -74,10 +64,14 @@ class MainPage(QMainWindow):
     def init_ui(self):
         """ Setup the UI
         """
-        style_path = os.path.abspath(resource_filename('ui_files', 'gui_stylesheet.css'))
-        style_file = open(style_path)
-        self.app.setStyleSheet(style_file.read())
-        style_file.close()
+        #style_path = os.path.abspath(resource_filename('.ui_files', 'gui_stylesheet.css'))
+        style_path = os.path.join(os.path.dirname(__file__), 'ui_files', 'gui_stylesheet.css')
+        # style_file = open(style_path)
+        # self.app.setStyleSheet(style_file.read())
+        # style_file.close()
+        with open(style_path, "r") as f:
+            self.app.setStyleSheet(f.read())
+
         layout = QGridLayout()
         layout.setSpacing(10)
         grid_lt = QGridLayout()
@@ -2107,10 +2101,14 @@ def check_args(args):
         if not mandatory_args.issubset(set(dir(args))):
             raise Exception(("You're missing essential arguments!"))
 
-def main():
+def main(args=None):
     """ main, creates main plotting window """
-    args = get_args()
-    check_args(args)
+    #args = get_args()
+    #check_args(args)
+    if args is None:
+        args = get_args()
+    else:
+        check_args(args)
     app = QApplication(sys.argv)
     ex = MainPage(args, app)
     sys.exit(app.exec_())

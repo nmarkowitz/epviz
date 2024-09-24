@@ -1,7 +1,7 @@
 """ Module for testing the filter options window """
 import sys
 import os
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
@@ -22,7 +22,7 @@ class TestImgSaving(unittest.TestCase):
         self.TEST_FN = "test_files/chb.edf"
         self.TEST_FN_ANN = "test_files/tuh_with_annotations.edf"
         self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.parent = MainPage(args, app)

@@ -1,6 +1,6 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('visualization')
+sys.path.append('epviz')
 from PyQt5.QtWidgets import QApplication
 import unittest
 from plot_utils import *

@@ -1,20 +1,20 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
-from visualization.signal_stats.signalStats_options import SignalStatsOptions
-from visualization.signal_stats.signalStats_info import SignalStatsInfo
-from visualization.plot import MainPage
-from visualization.plot import check_args, get_args
+from epviz.signal_stats.signalStats_options import SignalStatsOptions
+from epviz.signal_stats.signalStats_info import SignalStatsInfo
+from epviz.plot import MainPage
+from epviz.plot import check_args, get_args
 
 app = QApplication([])
 class TestSignalStats(unittest.TestCase):
     def setUp(self):
         self.TEST_FN = "test_files/chb.edf"
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.parent = MainPage(args, app)

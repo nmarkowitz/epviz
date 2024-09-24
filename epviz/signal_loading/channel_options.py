@@ -8,10 +8,10 @@ from matplotlib.backends.qt_compat import QtWidgets
 
 import numpy as np
 import pyedflib
-from predictions.prediction_info import PredictionInfo
-from signal_loading.channel_info import convert_txt_chn_names
-from signal_loading.organize_channels import OrganizeChannels
-from signal_loading.color_options import ColorOptions
+from ..predictions import PredictionInfo
+from .channel_info import convert_txt_chn_names
+from .organize_channels import OrganizeChannels
+from .color_options import ColorOptions
 
 class ChannelOptions(QWidget):
     """ Class for the channel loading window """

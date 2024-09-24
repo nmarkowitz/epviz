@@ -1,14 +1,14 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('visualization')
+sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
-from visualization.signal_loading.channel_options import ChannelOptions
-from visualization.signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
-from visualization.plot import MainPage
-from visualization.plot import check_args, get_args
+from epviz.signal_loading.channel_options import ChannelOptions
+from epviz.signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
+from epviz.plot import MainPage
+from epviz.plot import check_args, get_args
 from preprocessing.edf_loader import EdfLoader
 
 from PyQt5.QtWidgets import QCheckBox
@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QCheckBox
 app = QApplication([])
 class TestChannelLoading(unittest.TestCase):
     def setUp(self):
-        sys.argv = ['visualization/plot.py']
+        sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
         self.parent = MainPage(args, app)
