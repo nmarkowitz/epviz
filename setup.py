@@ -20,6 +20,6 @@ setuptools.setup(
         "visualization.predictions", "visualization.preprocessing", "visualization.signal_stats",
         "visualization.spectrogram_window","visualization.ui_files",],
     entry_points={
-        'console_scripts': ['epviz=plot:main', ]
+        'console_scripts': ['epviz=visualization.plot:main', ]
     },
 )

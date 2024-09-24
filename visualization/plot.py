@@ -4,21 +4,23 @@ from os import path
 import sys
 import os
 
-from signal_loading.channel_info import ChannelInfo
-from signal_loading.channel_options import ChannelOptions
-from filtering.filter_options import FilterOptions
-from filtering.filter_info import FilterInfo
-from predictions.prediction_options import PredictionOptions
-from predictions.prediction_info import PredictionInfo
-from spectrogram_window.spec_options import SpecOptions
-from spectrogram_window.spec_info import SpecInfo
-from image_saving.saveImg_info import SaveImgInfo
-from image_saving.saveImg_options import SaveImgOptions
-from image_saving.saveTopoplot_options import SaveTopoplotOptions
-from edf_saving.saveEdf_info import SaveEdfInfo
-from edf_saving.saveEdf_options import SaveEdfOptions
-from signal_stats.signalStats_info import SignalStatsInfo
-from signal_stats.signalStats_options import SignalStatsOptions
+from .signal_loading import ChannelInfo, ChannelOptions
+
+from .filtering import FilterOptions, FilterInfo
+
+from .predictions import PredictionOptions, PredictionInfo
+
+from .spectrogram_window import SpecOptions, SpecInfo
+
+from .image_saving import SaveImgInfo, SaveImgOptions, SaveTopoplotOptions
+
+# from .edf_saving.saveEdf_info import SaveEdfInfo
+# from .edf_saving.saveEdf_options import SaveEdfOptions
+from .edf_saving import SaveEdfInfo, SaveEdfOptions
+
+# from .signal_stats.signalStats_info import SignalStatsInfo
+# from .signal_stats.signalStats_options import SignalStatsOptions
+from .signal_stats import SignalStatsInfo, SignalStatsOptions
 
 import pyedflib
 from plot_utils import check_annotations, filter_data, convert_from_count, get_time
