@@ -6,11 +6,11 @@ import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QDate, QTime
-from image_saving.saveImg_options import SaveImgOptions
-from image_saving.saveImg_info import SaveImgInfo
-from image_saving.saveTopoplot_options import SaveTopoplotOptions, _get_dim
-from predictions.prediction_options import PredictionOptions
-from plot import MainPage, check_args, get_args
+from epviz.image_saving.saveImg_options import SaveImgOptions
+from epviz.image_saving.saveImg_info import SaveImgInfo
+from epviz.image_saving.saveTopoplot_options import SaveTopoplotOptions, _get_dim
+from epviz.predictions.prediction_options import PredictionOptions
+from epviz.plot import MainPage, check_args, get_args
 
 import numpy as np
 
@@ -19,7 +19,8 @@ import datetime
 app = QApplication([])
 class TestImgSaving(unittest.TestCase):
     def setUp(self):
-        self.TEST_FN = "test_files/chb.edf"
+        #self.TEST_FN = "test_files/chb.edf"
+        self.TEST_FN = "test_files/demo.edf"
         self.TEST_FN_ANN = "test_files/tuh_with_annotations.edf"
         self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
         sys.argv = ['epviz/plot.py']

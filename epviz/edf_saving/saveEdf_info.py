@@ -17,7 +17,7 @@ class SaveEdfInfo():
         self.py_h = 2
         self.pyedf_header = {'technician': '', 'recording_additional': '', 'patientname': '',
                         'patient_additional': '', 'patientcode': '', 'equipment': '',
-                        'admincode': '', 'gender': '',
+                        'admincode': '', 'gender': '', "sex": "",
                         'startdate': datetime.datetime(2001, 1, 1, 1, 1, 1),
                         'birthdate': ''}
 

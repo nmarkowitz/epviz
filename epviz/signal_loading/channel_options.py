@@ -8,7 +8,7 @@ from matplotlib.backends.qt_compat import QtWidgets
 
 import numpy as np
 import pyedflib
-from ..predictions import PredictionInfo
+from epviz.predictions import PredictionInfo
 from .channel_info import convert_txt_chn_names
 from .organize_channels import OrganizeChannels
 from .color_options import ColorOptions

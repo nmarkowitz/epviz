@@ -100,11 +100,13 @@ class PredictionInfo():
             preds = torch.load(preds_fn)
         except:
             raise Exception("The predictions file could not be loaded.")
-        try:
-            preds = preds.detach()
-        except:
-            pass
-        preds = np.array(preds)
+
+        if not isinstance(preds, np.ndarray):
+            try:
+                preds = preds.detach()
+            except:
+                pass
+            preds = preds.numpy()
         ret = self.check_preds_shape(preds, 0, max_time, fs, nchns, binary)
         return ret
 

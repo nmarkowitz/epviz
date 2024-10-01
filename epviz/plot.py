@@ -4,16 +4,16 @@ from os import path
 import sys
 import os
 
-from .signal_loading import ChannelInfo, ChannelOptions
-from .filtering import FilterOptions, FilterInfo
-from .predictions import PredictionOptions, PredictionInfo
-from .spectrogram_window import SpecOptions, SpecInfo
-from .image_saving import SaveImgInfo, SaveImgOptions, SaveTopoplotOptions
-from .edf_saving import SaveEdfInfo, SaveEdfOptions
-from .signal_stats import SignalStatsInfo, SignalStatsOptions
+from epviz.signal_loading import ChannelInfo, ChannelOptions
+from epviz.filtering import FilterOptions, FilterInfo
+from epviz.predictions import PredictionOptions, PredictionInfo
+from epviz.spectrogram_window import SpecOptions, SpecInfo
+from epviz.image_saving import SaveImgInfo, SaveImgOptions, SaveTopoplotOptions
+from epviz.edf_saving import SaveEdfInfo, SaveEdfOptions
+from epviz.signal_stats import SignalStatsInfo, SignalStatsOptions
 
 import pyedflib
-from .plot_utils import check_annotations, filter_data, convert_from_count, get_time
+from epviz.plot_utils import check_annotations, filter_data, convert_from_count, get_time
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import (
@@ -34,7 +34,7 @@ from PyQt5.QtGui import QBrush, QColor, QPen, QFont, QDesktopServices
 import pyqtgraph as pg
 from pyqtgraph.dockarea import *
 
-from .preprocessing import EdfLoader
+from epviz.preprocessing import EdfLoader
 from scipy import signal
 
 from pkg_resources import resource_filename
@@ -914,7 +914,7 @@ class MainPage(QMainWindow):
         self.zoom_roi_pos = self.zoom_roi.pos()
         self.zoom_roi_size = self.zoom_roi.size()
 
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         nchns = self.ci.nchns_to_plot
 
         plot_data = np.zeros((self.ci.nchns_to_plot,self.window_size * fs))
@@ -1297,7 +1297,7 @@ class MainPage(QMainWindow):
             print_graph - whether or not to print a copy of the graph
         """
         black_pen = QPen(QColor(0,0,0),3)
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         if not self.argv.predictions_file is None and self.init == 0:
             self.predicted = 1
             self.pi.set_preds(self.argv.predictions_file, self.max_time,
@@ -1307,13 +1307,13 @@ class MainPage(QMainWindow):
         if right == 0 and self.count - num_move >= 0:
             self.count = self.count - num_move
         elif (right == 1 and (self.count + num_move +
-                self.window_size <= self.ci.data_to_plot.shape[1] / fs)):
+                self.window_size <= self.ci.data_to_plot.shape[1] / int(fs))):
             self.count = self.count + num_move
         self.slider.setValue(self.count)
         t = get_time(self.count)
         self.time_lbl.setText(t)
 
-        plot_data = np.zeros((self.ci.nchns_to_plot,self.window_size * fs))
+        plot_data = np.zeros((self.ci.nchns_to_plot,self.window_size * int(fs)))
         if self.filter_checked == 1:
             self.prep_filter_ws()
             # plot_data = np.zeros(self.filtered_data.shape)
@@ -1323,7 +1323,7 @@ class MainPage(QMainWindow):
             plot_data[plot_data < -3 * stddev] = -3 * stddev
         else:
             plot_data += self.ci.data_to_plot[:,
-                    self.count * fs:(self.count + self.window_size) * fs]
+                    self.count * int(fs):(self.count + self.window_size) * int(fs)]
             stddev = np.std(plot_data)
             plot_data[plot_data > 5 * stddev] = 5 * stddev  # float('nan') # clip amplitude
             plot_data[plot_data < -5 * stddev] = -5 * stddev
@@ -1363,7 +1363,7 @@ class MainPage(QMainWindow):
                     for i in range(nchns):
                         if chns[k][i]:
                             if i == plot_data.shape[0] - 1:
-                                r1 = pg.QtGui.QGraphicsRectItem(starts[k] - self.count *
+                                r1 = pg.Qt.QtWidgets.QGraphicsRectItem(starts[k] - self.count *
                                         fs, y_lim *(i+0.5),
                                         ends[k] - starts[k], y_lim) # (x, y, w, h)
                                 r1.setPen(pg.mkPen(None))
@@ -1371,7 +1371,8 @@ class MainPage(QMainWindow):
                                 self.main_plot.addItem(r1)
                                 self.rect_list.append(r1)
                             else:
-                                r1 = pg.QtGui.QGraphicsRectItem(starts[k] - self.count *
+                                # pg.QtGui.QGraphicsRectItem
+                                r1 = pg.Qt.QtWidgets.QGraphicsRectItem(starts[k] - self.count *
                                         fs, y_lim *(i + 0.5),
                                         ends[k] - starts[k], y_lim) # (x, y, w, h)
                                 r1.setPen(pg.mkPen(None))
@@ -1407,7 +1408,7 @@ class MainPage(QMainWindow):
                         r, g, b, a = self.pi.get_color(chns[k][i])
                         brush = QBrush(QColor(r, g, b, a))
                         if i == plot_data.shape[0] - 1:
-                            r1 = pg.QtGui.QGraphicsRectItem(starts[k] - self.count * fs,
+                            r1 = pg.Qt.QtWidgets.QGraphicsRectItem(starts[k] - self.count * fs,
                                     y_lim *(i+0.5),
                                     ends[k] - starts[k], y_lim) # (x, y, w, h)
                             r1.setPen(pg.mkPen(None))
@@ -1415,7 +1416,7 @@ class MainPage(QMainWindow):
                             self.main_plot.addItem(r1)
                             self.rect_list.append(r1)
                         else:
-                            r1 = pg.QtGui.QGraphicsRectItem(starts[k] - self.count * fs,
+                            r1 = pg.Qt.QtWidgets.QGraphicsRectItem(starts[k] - self.count * fs,
                                     y_lim *(i + 0.5),
                                     ends[k] - starts[k], y_lim) # (x, y, w, h)
                             r1.setPen(pg.mkPen(None))
@@ -1727,7 +1728,7 @@ class MainPage(QMainWindow):
     def prep_filter_ws(self):
         """ Does filtering for one window of size window_size
         """
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         if (len(self.filtered_data) == 0 or
                 (self.filtered_data.shape !=
                 self.ci.data_to_plot[:,self.count*fs:(self.count +
@@ -1759,7 +1760,7 @@ class MainPage(QMainWindow):
         """ Creates the spectrogram plot.
         """
         self.specPlot = self.plot_layout.addPlot(row=1, col=0)
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         f, Pxx_den = signal.welch(self.si.data[(1) * fs:(4) * fs], fs)
         self.specPlot.clear()
         self.spec_plot_lines = []
@@ -1777,7 +1778,7 @@ class MainPage(QMainWindow):
         """ Function called when the user changes the region that selects where in
             time to compute the power spectrum
         """
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         bounds = self.spec_select_time_rect.getRegion()
         self.spec_roi_val[0] = bounds[0]
         self.spec_roi_val[1] = bounds[1]
@@ -1802,7 +1803,7 @@ class MainPage(QMainWindow):
         self.main_plot.removeItem(self.spec_select_time_rect)
         redBrush = QBrush(QColor(217, 43, 24,50))
         nchns = self.ci.nchns_to_plot
-        fs = self.edf_info.fs
+        fs = int(self.edf_info.fs)
         self.spec_select_time_rect = pg.LinearRegionItem(values=(fs, 4 * fs),
                         brush=redBrush, movable=True,
                         orientation=pg.LinearRegionItem.Vertical)

@@ -13,17 +13,20 @@ from epviz.plot import check_args, get_args
 import torch
 import numpy as np
 import datetime
+import os.path as op
 
 app = QApplication([])
 class TestPrediction(unittest.TestCase):
     def setUp(self):
-        self.TEST_FN = "test_files/chb.edf"
-        self.TEST_MODEL = "test_files/chb_model.pt"
-        self.TEST_DATA = "test_files/chb_features.pt"
-        self.TEST_PREDS = "test_files/chb_preds.pt"
-        self.TEST_PREDS_MULTICLASS = "test_files/chb_multiclass.pt"
-        self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
-        self.TEST_PREDS_MULTI_CLASS_CHN = "test_files/chb_multiclass_multichannel.pt"
+        pdir = op.dirname(op.dirname(op.abspath(__file__)))
+        test_file_dir = op.join(pdir, "test_files")
+        self.TEST_FN = op.join(test_file_dir, "chb.edf")
+        self.TEST_MODEL = op.join(test_file_dir, "chb_model.pt")
+        self.TEST_DATA = op.join(test_file_dir, "chb_features.pt")
+        self.TEST_PREDS = op.join(test_file_dir, "chb_preds.pt")
+        self.TEST_PREDS_MULTICLASS = op.join(test_file_dir, "chb_multiclass.pt")
+        self.TEST_PREDS_MULTICHN = op.join(test_file_dir, "chb_multichannel.pt")
+        self.TEST_PREDS_MULTI_CLASS_CHN = op.join(test_file_dir, "chb_multiclass_multichannel.pt")
         sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
