@@ -648,9 +648,9 @@ class MainPage(QMainWindow):
             return
         else:
             self.edf_file_name_temp = name
-            loader = EdfLoader()
+            self.loader = EdfLoader()
             try:
-                self.edf_info_temp = loader.load_metadata(name)
+                self.edf_info_temp = self.loader.load_metadata(name)
             except:
                 self.throw_alert("The .edf file is invalid.")
                 return

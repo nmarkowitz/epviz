@@ -3,7 +3,7 @@ import sklearn.ensemble
 import sklearn.linear_model
 import matplotlib.pyplot as plt
 
-from models.basemodel import BaseModel
+from epviz.models.basemodel import BaseModel
 
 
 class SklearnChannelMixin():

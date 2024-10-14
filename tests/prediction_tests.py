@@ -1,19 +1,24 @@
 """ Module for testing the filter options window """
 import sys
-sys.path.append('epviz')
+import os.path as op
+sys.path.append(op.join( op.dirname( op.dirname(__file__)), "models"))
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
+from epviz import models
 from epviz.predictions.prediction_options import PredictionOptions
 from epviz.predictions.prediction_info import PredictionInfo
 from epviz.plot import MainPage
 from epviz.plot import check_args, get_args
 
+from epviz import models
+sys.path.append(op.dirname(models.__file__))
+
 import torch
 import numpy as np
 import datetime
-import os.path as op
+
 
 app = QApplication([])
 class TestPrediction(unittest.TestCase):

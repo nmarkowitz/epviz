@@ -1,6 +1,7 @@
 """ Holds the data needed for plotting """
 import torch
 import numpy as np
+from epviz import models
 
 class PredictionInfo():
     """ Data structure for holding model and preprocessed data for prediction """
