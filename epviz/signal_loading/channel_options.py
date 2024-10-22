@@ -471,7 +471,8 @@ class ChannelOptions(QWidget):
             #self.ar1010 and self.cbox_bip1010.isChecked()):
             plot_bip_from_ar = 1
         mont_type, txt_file_name = self._get_mont_type()
-        self.data.prepare_to_plot(idxs, self.parent, mont_type, plot_bip_from_ar, txt_file_name)
+        #self.data.prepare_to_plot(idxs, self.parent, mont_type, plot_bip_from_ar, txt_file_name)
+        self.data.prepare_to_plot_new(idxs, self.parent, mont_type, plot_bip_from_ar, txt_file_name)
         # check if multi-chn pred and number of chns match
         self.check_multi_chn_preds()
         return 0

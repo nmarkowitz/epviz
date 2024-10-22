@@ -1306,8 +1306,10 @@ class MainPage(QMainWindow):
 
         if right == 0 and self.count - num_move >= 0:
             self.count = self.count - num_move
+        # elif (right == 1 and (self.count + num_move +
+        #         self.window_size <= self.ci.data_to_plot.shape[1] / int(fs))):
         elif (right == 1 and (self.count + num_move +
-                self.window_size <= self.ci.data_to_plot.shape[1] / int(fs))):
+                              self.window_size <= self.edf_info_temp.nsamples[0] / int(fs))):
             self.count = self.count + num_move
         self.slider.setValue(self.count)
         t = get_time(self.count)
@@ -1322,8 +1324,9 @@ class MainPage(QMainWindow):
             plot_data[plot_data > 3 * stddev] = 3 * stddev  # float('nan') # clip amplitude
             plot_data[plot_data < -3 * stddev] = -3 * stddev
         else:
-            plot_data += self.ci.data_to_plot[:,
-                    self.count * int(fs):(self.count + self.window_size) * int(fs)]
+            #plot_data += self.ci.data_to_plot[:,
+            #        self.count * int(fs):(self.count + self.window_size) * int(fs)]
+            plot_data += self.ci.get_data(self.count * int(fs), (self.count + self.window_size) * int(fs))
             stddev = np.std(plot_data)
             plot_data[plot_data > 5 * stddev] = 5 * stddev  # float('nan') # clip amplitude
             plot_data[plot_data < -5 * stddev] = -5 * stddev

@@ -145,7 +145,13 @@ class ChannelInfo():
         self.txt_file_fn = ""
         self.organize = 0
 
+        self.edf_io_handle = None
+        self.plot_bip_from_ar = None
+        self.data_cfgs = {}
+        self.labels = []
+
         self.labels_to_plot = []
+        self.chn_indices = None
         self.nchns_to_plot = 0
         self.mont_type = 5
 
@@ -285,7 +291,8 @@ class ChannelInfo():
                             ret[i] = 0
         return ret
 
-    def prepare_to_plot(self, idxs, parent, mont_type, plot_bip_from_ar = 0, txt_file_name = ""):
+
+    def prepare_to_plot(self, idxs, parent, mont_type, plot_bip_from_ar = 0, txt_file_name = "", sample_start=None, sample_stop=None):
         """
         Prepares everything needed to plot the data.
 
@@ -301,12 +308,15 @@ class ChannelInfo():
             txt_file_name - name of text file if needed
         """
         f = pyedflib.EdfReader(self.edf_fn)
+        self.edf_io_handle = f
 
         # Things needed to plot - reset each time
         # see if channels are already organized ie if organize is true
         # and all of the correct channels are present
         ret = 1
         self.nchns_to_plot = len(idxs)
+
+        # If chose to use bipolar montage
         if plot_bip_from_ar:
             self.nchns_to_plot = len(idxs) - 1
         if (plot_bip_from_ar and len(self.labels_to_plot) != 0
@@ -318,6 +328,7 @@ class ChannelInfo():
         elif plot_bip_from_ar:
             ret = 0
 
+        # Unsure when this would be true
         if (not plot_bip_from_ar and len(self.labels_to_plot) != 0
                 and len(self.labels_to_plot) == self.nchns_to_plot + 1):
             for k in range(len(idxs)):
@@ -325,23 +336,29 @@ class ChannelInfo():
                     ret = 0
         elif not plot_bip_from_ar:
             ret = 0
+
+        # Some organization already done. Will exit here
         if ret == 1 and self.organize: # already organized
             # redo the colors in case they have been changed
             self.colors = []
             for l in self.labels_to_plot[1:]:
                 self.colors.append(self._get_color(l))
             return
+
+        # A text file will be used
         if self.use_loaded_txt_file:
             self.organize = 0
 
+        # The standard variables
         self.labels_to_plot = ["Notes"]
         self.colors = []
         self.data_to_plot = []
         self.nchns_to_plot = 0
-        self.list_of_chns = []
+        self.list_of_chns = [] # list of indices of the channels to plot
         for k in range(len(idxs)):
             self.list_of_chns.append(idxs[k])
 
+        # Check if any of the channels are average reference / bipolar
         ar = 0
         bip = 0
         ar1010 = 0
@@ -352,6 +369,7 @@ class ChannelInfo():
             self.data_to_plot = np.zeros((self.nchns_to_plot - 1, parent.edf_info_temp.nsamples[0]))
         c = 0
 
+        # If plot bipolar from array
         if plot_bip_from_ar:
             if mont_type == 1:
                 ar = self.can_do_bip_ar_idx(idxs,1,0) # must have all AR chns to convert to bipolar
@@ -374,6 +392,7 @@ class ChannelInfo():
                         self.labels_to_plot.append(self.labelsBIP1020[k])
                         self.colors.append(self._get_color(self.labelsBIP1020[k]))
                         c += 1
+                    self.bip_idx = bip_idx
 
                     ar_idxs = self.get_chns(self.labelsAR1020) # clear these from the list
                     k = 0
@@ -423,6 +442,7 @@ class ChannelInfo():
         # Check if any of the channels are average reference / bipolar
         #ar = self.can_do_bip_ar_idx(idxs,1,0)
         #bip = self.can_do_bip_ar_idx(idxs,0,0)
+        # Decide if ar, bip, ar1010
         ar = 0
         ar1010 = 0
         for i in range(len(idxs)):
@@ -451,6 +471,14 @@ class ChannelInfo():
         elif ar1010:
             labels = self.labelsAR1010
 
+        self.data_cfgs = {
+            "bip": bip,
+            "ar": ar,
+            "bip1010": bip1010,
+            "ar1010": ar1010
+        }
+        self.labels = labels
+
         # insert any data for the given montages
         if bip or ar or ar1010 or bip1010 or self.use_loaded_txt_file:
             for i in range(len(labels)):
@@ -465,6 +493,7 @@ class ChannelInfo():
                         k = len(idxs)
                     else:
                         k += 1
+        # If
         if len(idxs) > 0:
             # shift data back
             for k in range(c):
@@ -477,3 +506,290 @@ class ChannelInfo():
                 self.data_to_plot[c,:] = f.readSignal(idxs[k]) # data[idxs[k],:]
                 c -= 1
         self.fs = 2
+
+    def prepare_to_plot_new(self, idxs, parent, mont_type, plot_bip_from_ar = 0, txt_file_name = "", sample_start=None, sample_stop=None):
+        """
+        Prepares everything needed to plot the data.
+
+        inputs:
+            idxs - the list of the indices of the channels to be plotted,
+                list is 1 where the chn is selected, otherwise 0
+            parent - the main window, so that if needed self.predicted can
+                be set to false
+            mont_type - what montage is selected (0 = ar1020, 1 = bip1020, 2 = ar1010,
+                                                    3 = bip1010, 4 = txtfile, 5 = none)
+            plot_bip_from_ar - 1 if a bipolar montage should be generated
+                from average reference data
+            txt_file_name - name of text file if needed
+        """
+        f = pyedflib.EdfReader(self.edf_fn)
+        self.edf_io_handle = f
+
+        # Things needed to plot - reset each time
+        # see if channels are already organized ie if organize is true
+        # and all of the correct channels are present
+        ret = 1
+        self.nchns_to_plot = len(idxs)
+        self.chn_indices = idxs
+
+        # If chose to use bipolar montage
+        if plot_bip_from_ar:
+            self.nchns_to_plot = len(idxs) - 1
+        if (plot_bip_from_ar and len(self.labels_to_plot) != 0
+                and len(self.labels_to_plot) == self.nchns_to_plot + 1):
+            if self.can_do_bip_ar_idx(idxs,1,0) and len(idxs) == 18:
+                for k in range(idxs):
+                    if not self.labelsBIP1020[k] in self.labels_to_plot:
+                        ret = 0
+        elif plot_bip_from_ar:
+            ret = 0
+
+        # Unsure when this would be true
+        if (not plot_bip_from_ar and len(self.labels_to_plot) != 0
+                and len(self.labels_to_plot) == self.nchns_to_plot + 1):
+            for k in range(len(idxs)):
+                if not self.converted_chn_names[idxs[k]] in self.labels_to_plot:
+                    ret = 0
+        elif not plot_bip_from_ar:
+            ret = 0
+
+        # Some organization already done. Will exit here
+        if ret == 1 and self.organize: # already organized
+            # redo the colors in case they have been changed
+            self.colors = []
+            for l in self.labels_to_plot[1:]:
+                self.colors.append(self._get_color(l))
+            return
+
+        # A text file will be used
+        if self.use_loaded_txt_file:
+            self.organize = 0
+
+        # The standard variables
+        self.labels_to_plot = ["Notes"]
+        self.colors = []
+        self.data_to_plot = []
+        self.nchns_to_plot = 0
+        self.list_of_chns = [] # list of indices of the channels to plot
+        for k in range(len(idxs)):
+            self.list_of_chns.append(idxs[k])
+
+        # Check if any of the channels are average reference / bipolar
+        ar = 0
+        bip = 0
+        ar1010 = 0
+        bip1010 = 0
+        self.nchns_to_plot = len(idxs)
+        # self.data_to_plot = np.zeros((self.nchns_to_plot, parent.edf_info_temp.nsamples[0]))
+        # if plot_bip_from_ar and self.can_do_bip_ar_idx(idxs,1,0):
+        #     self.data_to_plot = np.zeros((self.nchns_to_plot - 1, parent.edf_info_temp.nsamples[0]))
+        c = 0
+
+        # If plot bipolar from array
+        if plot_bip_from_ar:
+            if mont_type == 1:
+                ar = self.can_do_bip_ar_idx(idxs,1,0) # must have all AR chns to convert to bipolar
+                if ar:
+                    bip_idx = np.zeros((18,2))
+                    for k in range(18):
+                        str0 = self.labelsBIP1020[k].split('-')[0]
+                        str1 = self.labelsBIP1020[k].split('-')[1]
+                        for i, strg in enumerate(self.converted_chn_names):
+                            if strg == str0:
+                                idx0 = i
+                            if strg == str1:
+                                idx1 = i
+                        bip_idx[k,0] = idx0
+                        bip_idx[k,1] = idx1
+                    for k in range(18):
+                        idx0 = bip_idx[k,0]
+                        idx1 = bip_idx[k,1]
+                        # self.data_to_plot[k,:] = f.readSignal(int(idx0)) - f.readSignal(int(idx1))
+                        self.labels_to_plot.append(self.labelsBIP1020[k])
+                        self.colors.append(self._get_color(self.labelsBIP1020[k]))
+                        c += 1
+                    self.bip_idx = bip_idx
+
+                    ar_idxs = self.get_chns(self.labelsAR1020) # clear these from the list
+                    k = 0
+                    while k < len(idxs):
+                        if ar_idxs[idxs[k]]:
+                            idxs.pop(k)
+                        else:
+                            k += 1
+                    self.nchns_to_plot = 18 + len(idxs)
+                    if self.nchns_to_plot == 18:
+                        self.mont_type = 1
+            """
+            elif mont_type == 3:
+                ar = self.can_do_bip_ar_idx(idxs,1,1) # must have all AR chns to convert to bipolar
+                if ar:
+                    bip_idx = np.zeros((len(self.labelsBIP1010),2))
+                    for k in range(len(self.labelsBIP1010)):
+                        str0 = self.labelsBIP1010[k].split('-')[0]
+                        str1 = self.labelsBIP1010[k].split('-')[1]
+                        for i, strg in enumerate(self.converted_chn_names):
+                            if strg == str0:
+                                idx0 = i
+                            if strg == str1:
+                                idx1 = i
+                        bip_idx[k,0] = idx0
+                        bip_idx[k,1] = idx1
+                    for k in range(len(self.labelsBIP1010)):
+                        idx0 = bip_idx[k,0]
+                        idx1 = bip_idx[k,1]
+                        self.data_to_plot[k,:] = f.readSignal(int(idx0)) - f.readSignal(int(idx1))
+                        self.labels_to_plot.append(self.labelsBIP1010[k])
+                        self.colors.append(self._get_color(self.labelsBIP1010[k]))
+                        c += 1
+
+                    ar_idxs = self.get_chns(self.labelsAR1010) # clear these from the list
+                    k = 0
+                    while k < len(idxs):
+                        if ar_idxs[idxs[k]]:
+                            idxs.pop(k)
+                        else:
+                            k += 1
+                    self.nchns_to_plot = len(self.labelsBIP1010) + len(idxs)
+                    if self.nchns_to_plot == len(self.labelsBIP1010):
+                        self.mont_type = 3
+            """
+
+        # Check if any of the channels are average reference / bipolar
+        #ar = self.can_do_bip_ar_idx(idxs,1,0)
+        #bip = self.can_do_bip_ar_idx(idxs,0,0)
+        # Decide if ar, bip, ar1010
+        ar = 0
+        ar1010 = 0
+        for i in range(len(idxs)):
+            if self.converted_chn_names[idxs[i]] in self.labelsAR1020 and mont_type == 0:
+                ar = 1
+            elif self.converted_chn_names[idxs[i]] in self.labelsBIP1020 and mont_type == 1:
+                bip = 1
+            elif self.converted_chn_names[idxs[i]] in self.labelsAR1010 and mont_type == 2:
+                ar1010 = 1
+            #elif self.converted_chn_names[idxs[i]] in self.labelsBIP1010 and mont_type == 3:
+            #    bip1010 = 1
+            elif mont_type in [4, 5]:
+                if self.converted_chn_names[idxs[i]] in self.labelsAR1020:
+                    ar = 1
+                elif self.converted_chn_names[idxs[i]] in self.labelsBIP1020:
+                    bip = 1
+
+        if self.use_loaded_txt_file and mont_type == 4:
+            labels = self.labels_from_txt_file[txt_file_name]
+        elif bip:
+            labels = self.labelsBIP1020
+        elif ar:
+            labels = self.labelsAR1020
+        elif bip1010:
+            labels = self.labelsBIP1010
+        elif ar1010:
+            labels = self.labelsAR1010
+
+        self.data_cfgs = {
+            "bip": bip,
+            "ar": ar,
+            "bip1010": bip1010,
+            "ar1010": ar1010
+        }
+        self.labels = labels
+
+        # insert any data for the given montages
+        if bip or ar or ar1010 or bip1010 or self.use_loaded_txt_file:
+            for i in range(len(labels)):
+                k = 0
+                while k < len(idxs):
+                    if self.converted_chn_names[idxs[k]] == labels[i]:
+                        self.labels_to_plot.append(labels[i])
+                        self.colors.append(self._get_color(labels[i]))
+                        # self.data_to_plot[c,:] = f.readSignal(idxs[k]) # data[idxs[k],:]
+                        c += 1
+                        idxs.pop(k)
+                        k = len(idxs)
+                    else:
+                        k += 1
+        if len(idxs) > 0:
+            # shift data back
+            # for k in range(c):
+            #     self.data_to_plot[c - k + len(idxs) - 1,:] = self.data_to_plot[c - k - 1,:]
+            #     self.data_to_plot[c - k - 1,:] = np.zeros((1,self.data_to_plot.shape[1]))
+            c = len(idxs) - 1
+            for k in range(len(idxs)):
+                self.labels_to_plot.insert(1,self.converted_chn_names[idxs[k]])
+                self.colors.insert(0, self._get_color(self.converted_chn_names[idxs[k]]))
+                #self.data_to_plot[c,:] = f.readSignal(idxs[k]) # data[idxs[k],:]
+                c -= 1
+        self.fs = 2
+
+    def get_data(self, sample_start, sample_stop):
+        """
+        Prepares everything needed to plot the data.
+
+        inputs:
+            idxs - the list of the indices of the channels to be plotted,
+                list is 1 where the chn is selected, otherwise 0
+            parent - the main window, so that if needed self.predicted can
+                be set to false
+            mont_type - what montage is selected (0 = ar1020, 1 = bip1020, 2 = ar1010,
+                                                    3 = bip1010, 4 = txtfile, 5 = none)
+            plot_bip_from_ar - 1 if a bipolar montage should be generated
+                from average reference data
+            txt_file_name - name of text file if needed
+        """
+        f = self.edf_io_handle
+        plot_bip_from_ar = self.plot_bip_from_ar
+        mont_type = self.mont_type
+        data = []
+
+        ar = self.data_cfgs["ar"]
+        bip = self.data_cfgs["bip"]
+        ar1010 = self.data_cfgs["ar1010"]
+        bip1010 = self.data_cfgs["bip1010"]
+
+        labels = self.labels
+        idxs = self.list_of_chns
+        #self.chn_indices
+
+        n_samples = sample_stop - sample_start
+
+        data = np.zeros((self.nchns_to_plot, n_samples))
+        if plot_bip_from_ar and self.can_do_bip_ar_idx(idxs,1,0):
+            data = np.zeros((self.nchns_to_plot - 1, n_samples))
+        c = 0
+
+        # If plot bipolar from array
+        if plot_bip_from_ar:
+            if mont_type == 1:
+                ar = self.can_do_bip_ar_idx(idxs,1,0) # must have all AR chns to convert to bipolar
+                if ar:
+                    for k in range(18):
+                        idx0 = self.bip_idx[k,0]
+                        idx1 = self.bip_idx[k,1]
+                        data[k,:] = f.readSignal(int(idx0), sample_start, sample_stop) - f.readSignal(int(idx1), sample_start, sample_stop)
+                        c += 1
+
+        # insert any data for the given montages
+        if bip or ar or ar1010 or bip1010 or self.use_loaded_txt_file:
+            for i in range(len(labels)):
+                k = 0
+                while k < len(idxs):
+                    if self.converted_chn_names[idxs[k]] == labels[i]:
+                        data[c,:] = f.readSignal(idxs[k], sample_start, sample_stop) # data[idxs[k],:]
+                        c += 1
+                        idxs.pop(k)
+                        k = len(idxs)
+                    else:
+                        k += 1
+
+        if len(idxs) > 0:
+            # shift data back
+            for k in range(c):
+                data[c - k + len(idxs) - 1,:] = data[c - k - 1,:]
+                data[c - k - 1,:] = np.zeros((1,data.shape[1]))
+            c = len(idxs) - 1
+            for k in range(len(idxs)):
+                data[c,:] = f.readSignal(idxs[k], sample_start, sample_stop) # data[idxs[k],:]
+                c -= 1
+
+        return data
