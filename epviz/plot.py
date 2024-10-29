@@ -39,6 +39,7 @@ from scipy import signal
 
 from pkg_resources import resource_filename
 
+
 class MainPage(QMainWindow):
     """ Class for main plottintg window """
 
