@@ -3,7 +3,7 @@ import sklearn.linear_model
 from sklearn.svm import SVC, LinearSVC
 import numpy as np
 
-from epviz.models.basemodel import BaseModel
+from .basemodel import BaseModel
 
 
 class SklearnMixin():
