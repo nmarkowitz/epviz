@@ -1158,6 +1158,8 @@ class MainPage(QMainWindow):
             # if predictions, save them as well
             if self.predicted == 1 and not self.pi.multi_class:
                 temp = []
+                n_samples = data_to_save[0].shape[0]  # Number of samples in the original data
+
                 for i in range(nchns):
                     temp.append(data_to_save[i])
                 if self.pi.pred_by_chn:
@@ -1168,13 +1170,18 @@ class MainPage(QMainWindow):
                             nchns + i, fs / self.pi.pred_width)
                         saved_edf.setLabel(nchns + i, "PREDICTIONS_" + str(i))
                     for i in range(nchns):
-                        temp.append(self.pi.preds_to_plot[:, i])
+                        # Resize prediction data to match the number of samples
+                        preds = np.resize(self.pi.preds_to_plot[:, i], n_samples)
+                        temp.append(preds)
+                        #temp.append(self.pi.preds_to_plot[:, i])
                 else:
                     saved_edf.setPhysicalMaximum(nchns, 1)
                     saved_edf.setPhysicalMinimum(nchns, 0)
                     saved_edf.setSamplefrequency(nchns, fs / self.pi.pred_width)
                     saved_edf.setLabel(nchns, "PREDICTIONS")
-                    temp.append(self.pi.preds_to_plot)
+                    preds = np.resize(self.pi.preds_to_plot[:, i], n_samples)
+                    temp.append(preds)
+                    # temp.append(self.pi.preds_to_plot)
                 data_to_save = temp
             saved_edf.writeSamples(data_to_save)
 
@@ -1650,7 +1657,10 @@ class MainPage(QMainWindow):
 
         self.ax = self.m.fig.add_subplot()#self.m.gs[0])
         im, cn = mne.viz.plot_topomap(curr_score, pos2d, sphere=1,
-                                  axes=self.ax, vmin=0, vmax=1, show=False,
+                                  axes=self.ax, 
+                                  #vmin=0, vmax=1,
+                                  vlim=(0,1), 
+                                  show=False,
                                   outlines='head')
         self.m.draw()
 
@@ -1872,7 +1882,7 @@ class MainPage(QMainWindow):
         self.remove_stat_select_time_rect()
         self.ssi.chn = self.chn_qlist.currentRow()
         self.create_stat_select_time_rect(self.ssi.chn)
-        mean_str, var_str, line_len_str = self.get_stats(0,self.max_time * self.edf_info.fs)
+        mean_str, var_str, line_len_str = self.get_stats(0,self.max_time * int(self.edf_info.fs))
 
         mean_str = "" + "{:.2f}".format(mean_str)
         self.mean_lbl.setText(mean_str)
@@ -1964,13 +1974,13 @@ class MainPage(QMainWindow):
         if self.filter_checked == 1:
             lp = self.fi.lp
             hp = self.fi.hp
-        fs_band_dict = self.ssi.get_power(data, s, f, hp, lp, self.edf_info.fs)
+        fs_band_dict = self.ssi.get_power(data, s, f, hp, lp, int(self.edf_info.fs))
         return fs_band_dict
 
     def set_fs_band_lbls(self):
         """ Sets alpha, beta, gamma, delta, theta lbls for stats.
         """
-        fs_band_dict = self.get_power_band_stats(0, self.max_time * self.edf_info.fs)
+        fs_band_dict = self.get_power_band_stats(0, self.max_time * int(self.edf_info.fs))
         for k in fs_band_dict.keys():
             key_str = "" + "{:.2e}".format(fs_band_dict[k])
             self.fs_band_lbls[k].setText(key_str)

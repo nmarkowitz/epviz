@@ -179,9 +179,14 @@ class SaveTopoplotOptions(QWidget):
             # Scale locations from [-1, 1]
             pos2d = 2 * (pos2d - 0.5)
 
-            _, _ = mne.viz.plot_topomap(curr_score, pos2d, sphere=1,
-                                  axes=self.ax[i], vmin=0, vmax=1, show=False,
-                                  outlines='head')
+            _, _ = mne.viz.plot_topomap(
+                curr_score, pos2d,
+                sphere=1,
+                axes=self.ax[i],
+                #vmin=0, vmax=1,
+                vlim=(0,1),
+                show=False,
+                outlines='head')
 
             if self.show_subplot_times:
                 title = self._get_time(start, i)
@@ -203,7 +208,7 @@ class SaveTopoplotOptions(QWidget):
         count = self.parent.count
         ws = self.parent.window_size
         width = int(self.parent.pi.pred_width)
-        fs = self.parent.edf_info.fs
+        fs = int(self.parent.edf_info.fs)
         for i in range(count * fs, (count + ws) * fs):
             if i % width == 0:
                 start = i / width

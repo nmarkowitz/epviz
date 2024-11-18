@@ -6,11 +6,13 @@ import unittest
 from epviz.preprocessing.edf_loader import EdfLoader, _check_label
 from epviz.preprocessing.eeg_info import EegInfo
 import pyedflib
+import os
 
 class TestEdfLoader(unittest.TestCase):
     def setUp(self):
         # Setup
-        self.TEST_FN = "test_files/chb.edf"
+        pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.TEST_FN = os.path.join(pdir, "test_files", "chb.edf")
         self.edf_loader = EdfLoader()
 
     def test_setup(self):

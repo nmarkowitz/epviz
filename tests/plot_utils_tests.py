@@ -3,17 +3,19 @@ import sys
 sys.path.append('epviz')
 from PyQt5.QtWidgets import QApplication
 import unittest
-from plot_utils import *
-from preprocessing.edf_loader import EdfLoader
-from filtering.filter_info import FilterInfo
+from epviz.plot_utils import *
+from epviz.preprocessing.edf_loader import EdfLoader
+from epviz.filtering.filter_info import FilterInfo
 import pyedflib
 import numpy as np
-import preprocessing.dsp as dsp
+import os
+import epviz.preprocessing.dsp as dsp
 
 app = QApplication([])
 class TestPlotUtils(unittest.TestCase):
     def setUp(self):
         # Set the test files
+        pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.TEST_FN = "test_files/tuh_with_annotations.edf"
         loader = EdfLoader()
         self.EDF_INFO = loader.load_metadata(self.TEST_FN)

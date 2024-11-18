@@ -7,13 +7,13 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
 sys.path.append('epviz')
-from signal_loading.channel_options import ChannelOptions
-from signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
-from predictions.prediction_options import PredictionOptions
-from plot import MainPage
-from plot import check_args, get_args
-from preprocessing.edf_loader import EdfLoader
-from plot_utils import filter_data
+from epviz.signal_loading.channel_options import ChannelOptions
+from epviz.signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
+from epviz.predictions.prediction_options import PredictionOptions
+from epviz.plot import MainPage
+from epviz.plot import check_args, get_args
+from epviz.preprocessing.edf_loader import EdfLoader
+from epviz.plot_utils import filter_data
 
 from PyQt5.QtWidgets import QCheckBox
 import pyedflib
@@ -23,12 +23,14 @@ app = QApplication([])
 class TestPlot(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.TEST_FN = "test_files/tuh_with_annotations.edf"
-        self.TEST_FN_FOR_PREDS = "test_files/chb.edf"
-        self.TEST_PREDS = "test_files/chb_preds.pt"
-        self.TEST_PREDS_MULTICLASS = "test_files/chb_multiclass.pt"
-        self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
-        self.TEST_PREDS_MULTI_CLASS_CHN = "test_files/chb_multiclass_multichannel.pt"
+        pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        test_file_dir = os.path.join(pdir, "test_files")
+        self.TEST_FN = os.path.join(test_file_dir,"tuh_with_annotations.edf")
+        self.TEST_FN_FOR_PREDS = os.path.join(test_file_dir,"chb.edf")
+        self.TEST_PREDS = os.path.join(test_file_dir,"chb_preds.npy")
+        self.TEST_PREDS_MULTICLASS = os.path.join(test_file_dir,"chb_multiclass.npy")
+        self.TEST_PREDS_MULTICHN = os.path.join(test_file_dir,"chb_multichannel.npy")
+        self.TEST_PREDS_MULTI_CLASS_CHN = os.path.join(test_file_dir,"chb_multiclass_multichannel.npy")
         sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
@@ -634,7 +636,10 @@ class TestPlot(unittest.TestCase):
         self.plot_window.save_sig_to_edf()
 
         f = pyedflib.EdfReader("unittest_edf_file3.edf")
-        preds = torch.load(self.TEST_PREDS)
+        if self.TEST_PREDS.endswith(".npy"):
+            preds = np.load(self.TEST_PREDS)
+        else:
+            preds = torch.load(self.TEST_PREDS)
 
         nsignals = f.signals_in_file
         self.assertEqual(nsignals, self.plot_window.ci.nchns_to_plot + 1)

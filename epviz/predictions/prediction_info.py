@@ -73,14 +73,21 @@ class PredictionInfo():
     def set_data(self, data_fn):
         """ Set the data to the data from data_fn
         """
-        self.data = torch.load(data_fn)
+        if data_fn.endswith(".npy"):
+            self.data = np.load(data_fn)
+        else:
+            self.data = torch.load(data_fn)
         self.data_loaded = 1
         self.update_ready()
 
     def set_model(self, model_fn):
         """ Load in the model given by model_fn.
         """
-        self.model = torch.load(model_fn)
+        if model_fn.endswith(".skops"):
+            from skops.io import load
+            self.model = load(model_fn)
+        else:
+            self.model = torch.load(model_fn)
         self.model_loaded = 1
         self.update_ready()
 
@@ -98,7 +105,10 @@ class PredictionInfo():
             predictions must be for an integer number of samples in the file
         """
         try:
-            preds = torch.load(preds_fn)
+            if preds_fn.endswith(".npy"):
+                preds = np.load(preds_fn)
+            else:
+                preds = torch.load(preds_fn)
         except:
             raise Exception("The predictions file could not be loaded.")
 

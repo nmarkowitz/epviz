@@ -20,9 +20,10 @@ app = QApplication([])
 class TestImgSaving(unittest.TestCase):
     def setUp(self):
         #self.TEST_FN = "test_files/chb.edf"
-        self.TEST_FN = "test_files/demo.edf"
-        self.TEST_FN_ANN = "test_files/tuh_with_annotations.edf"
-        self.TEST_PREDS_MULTICHN = "test_files/chb_multichannel.pt"
+        pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.TEST_FN = os.path.join(pdir, "test_files", "chb.edf")# "test_files/demo.edf"
+        self.TEST_FN_ANN = os.path.join(pdir,"test_files","tuh_with_annotations.edf")
+        self.TEST_PREDS_MULTICHN = os.path.join(pdir,"test_files","chb_multichannel.npy")
         sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
@@ -31,7 +32,7 @@ class TestImgSaving(unittest.TestCase):
         self.saveimg_info = SaveImgInfo()
         # Set info
         self.saveimg_info.ylim = self.parent.ylim[0]
-        fs = self.parent.edf_info.fs
+        fs = int(self.parent.edf_info.fs)
         plot_data = np.zeros((self.parent.ci.nchns_to_plot, self.parent.window_size * fs))
         plot_data += self.parent.ci.data_to_plot[:,
                     self.parent.count * fs:(self.parent.count + self.parent.window_size) * fs]
@@ -149,7 +150,7 @@ class TestImgSaving(unittest.TestCase):
         self.saveimg_info = SaveImgInfo()
         # Set info
         self.saveimg_info.ylim = self.parent.ylim[0]
-        fs = self.parent.edf_info.fs
+        fs = int(self.parent.edf_info.fs)
         plot_data = np.zeros((self.parent.ci.nchns_to_plot, self.parent.window_size * fs))
         plot_data += self.parent.ci.data_to_plot[:,
                     self.parent.count * fs:(self.parent.count + self.parent.window_size) * fs]

@@ -12,12 +12,14 @@ from epviz.plot import MainPage
 from epviz.plot import check_args, get_args
 
 import datetime
+import os
 
 app = QApplication([])
 class TestEdfSaving(unittest.TestCase):
     def setUp(self):
-        self.TEST_FN = "test_files/chb.edf"
-        self.test_save_fn = "test_files/test0.edf"
+        pdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.TEST_FN = os.path.join(pdir, "test_files", "chb.edf")
+        self.test_save_fn = os.path.join(pdir, "test_files", "test0.edf")
         sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
@@ -146,7 +148,7 @@ class TestEdfSaving(unittest.TestCase):
         file = bytearray(file)
         pt_id_text = file[8:88].decode("utf-8").split(" ")
         rec_info_text = file[88:168].decode("utf-8").split(" ")
-        self.assertEqual(self.anon_ui.lbl_fn.text(), self.TEST_FN.split("/")[1])
+        self.assertEqual(self.anon_ui.lbl_fn.text(), self.TEST_FN.split("/")[-1])
         self.assertEqual(self.anon_ui.btn_anonfile.isEnabled(), 1)
         self.assertEqual(self.anon_ui.cbox_copyoriginal.isEnabled(), 1)
         self.assertEqual(self.anon_ui.cbox_setdefaults.isEnabled(), 1)

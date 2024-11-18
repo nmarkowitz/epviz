@@ -123,13 +123,19 @@ class SaveImgOptions(QWidget):
         self.m.fig.clf()
         self.ax = self.m.fig.add_subplot(self.m.gs[0])
 
-        del self.ax.lines[:]
+        #del self.ax.lines[:]
+        #self.ax.lines[:].remove()
+        for a in self.ax.lines:
+            a.remove()
+
         for i, a in enumerate(self.ann_list):
             a.remove()
         self.ann_list[:] = []
         for aspan in self.aspan_list:
             aspan.remove()
         self.aspan_list[:] = []
+
+        self.fs = int(self.fs)
 
         for i in range(self.nchns):
             if self.data.plot_ann:

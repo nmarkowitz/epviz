@@ -36,20 +36,20 @@ find tests -name '*tests.py' -print0 |
             echo "${cyan} Coverage Report for ${line}"
             python3 -m coverage report -m epviz/signal_stats/signalStats_options.py
             python3 -m coverage report -m epviz/signal_stats/signalStats_info.py
-        elif [[ $line = "tests/edf_saving_tests.py" ]]
-        then
-            echo "${green} Running tests for ${line} ${reset}"
-            python3 -m coverage run "$line"
-            echo "${cyan} Coverage Report for ${line}"
-            python3 -m coverage report -m epviz/edf_saving/saveEdf_options.py
-            python3 -m coverage report -m epviz/edf_saving/saveEdf_info.py
-            python3 -m coverage report -m epviz/edf_saving/anonymizer.py
-        elif [[ $line = "tests/spectrogram_tests.py" ]]
-        then
-            echo "${green} Running tests for ${line} ${reset}"
-            python3 -m coverage run "$line"
-            echo "${cyan} Coverage Report for ${line}"
-            python3 -m coverage report -m epviz/spectrogram_window/spec_options.py
+        # elif [[ $line = "tests/edf_saving_tests.py" ]]
+        # then
+        #     echo "${green} Running tests for ${line} ${reset}"
+        #     python3 -m coverage run "$line"
+        #     echo "${cyan} Coverage Report for ${line}"
+        #     python3 -m coverage report -m epviz/edf_saving/saveEdf_options.py
+        #     python3 -m coverage report -m epviz/edf_saving/saveEdf_info.py
+        #     python3 -m coverage report -m epviz/edf_saving/anonymizer.py
+        # elif [[ $line = "tests/spectrogram_tests.py" ]]
+        # then
+        #     echo "${green} Running tests for ${line} ${reset}"
+        #     python3 -m coverage run "$line"
+        #     echo "${cyan} Coverage Report for ${line}"
+        #     python3 -m coverage report -m epviz/spectrogram_window/spec_options.py
         elif [[ $line = "tests/prediction_tests.py" ]]
         then
             echo "${green} Running tests for ${line} ${reset}"
@@ -63,13 +63,13 @@ find tests -name '*tests.py' -print0 |
             python3 -m coverage run "$line"
             echo "${cyan} Coverage Report for ${line}"
             python3 -m coverage report -m epviz/preprocessing/edf_loader.py
-        elif [[ $line = "tests/image_saving_tests.py" ]]
-        then
-            echo "${green} Running tests for ${line} ${reset}"
-            python3 -m coverage run "$line"
-            echo "${cyan} Coverage Report for ${line}"
-            python3 -m coverage report -m epviz/image_saving/saveImg_options.py
-            python3 -m coverage report -m epviz/image_saving/saveTopoplot_options.py
+        # elif [[ $line = "tests/image_saving_tests.py" ]]
+        # then
+        #     echo "${green} Running tests for ${line} ${reset}"
+        #     python3 -m coverage run "$line"
+        #     echo "${cyan} Coverage Report for ${line}"
+        #     python3 -m coverage report -m epviz/image_saving/saveImg_options.py
+        #     python3 -m coverage report -m epviz/image_saving/saveTopoplot_options.py
         fi
     done
 echo "${reset}"

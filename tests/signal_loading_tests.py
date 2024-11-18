@@ -1,5 +1,6 @@
 """ Module for testing the filter options window """
 import sys
+import os.path as op
 sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
@@ -9,7 +10,7 @@ from epviz.signal_loading.channel_options import ChannelOptions
 from epviz.signal_loading.channel_info import ChannelInfo, _check_label, convert_txt_chn_names
 from epviz.plot import MainPage
 from epviz.plot import check_args, get_args
-from preprocessing.edf_loader import EdfLoader
+from epviz.preprocessing.edf_loader import EdfLoader
 
 from PyQt5.QtWidgets import QCheckBox
 
@@ -28,10 +29,12 @@ class TestChannelLoading(unittest.TestCase):
                             "EEG P4-REF","EEG P3-REF","EEG C4-REF","EEG C3-REF",
                             "EEG F4-REF","EEG F3-REF","EEG FP2-REF","EEG FP1-REF"]
         # Set the test files
-        self.TEST_FN = "test_files/tuh.edf"
-        self.TEST_TXT_FILE = "test_files/tuh_chns_valid.txt"
-        self.TEST_INVALID_TXT_FILE = "test_files/tuh_chns_invalid.txt"
-        self.TEST_FN_PREDS = "test_files/chb_with_saved_preds.edf"
+        pdir = op.dirname(op.dirname(op.abspath(__file__)))
+        test_file_dir = op.join(pdir, "test_files")
+        self.TEST_FN = op.join(test_file_dir, "tuh.edf")
+        self.TEST_TXT_FILE =  op.join(test_file_dir,"tuh_chns_valid.txt")
+        self.TEST_INVALID_TXT_FILE =  op.join(test_file_dir,"tuh_chns_invalid.txt")
+        self.TEST_FN_PREDS =  op.join(test_file_dir,"chb_with_saved_preds.edf")
         # Load in the file
         loader = EdfLoader()
         self.parent.edf_info_temp = loader.load_metadata(self.TEST_FN)

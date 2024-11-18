@@ -1,5 +1,6 @@
 """ Module for testing the filter options window """
 import sys
+import os.path as op
 sys.path.append('epviz')
 import unittest
 from PyQt5.QtWidgets import QApplication
@@ -13,7 +14,9 @@ from epviz.plot import check_args, get_args
 app = QApplication([])
 class TestSignalStats(unittest.TestCase):
     def setUp(self):
-        self.TEST_FN = "test_files/chb.edf"
+        pdir = op.dirname(op.dirname(op.abspath(__file__)))
+        test_file_dir = op.join(pdir, "test_files")
+        self.TEST_FN = op.join(test_file_dir,"chb.edf")
         sys.argv = ['epviz/plot.py']
         args = get_args()
         check_args(args)
