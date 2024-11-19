@@ -1,0 +1,3 @@
+[submodule "dl_models/DeepSOZ"]
+	path = dl_models/DeepSOZ
+	url = https://github.com/deeksha-ms/DeepSOZ.git

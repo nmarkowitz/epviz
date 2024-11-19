@@ -6,4 +6,6 @@ EPViz.egg-info/
 eeg-gui-venv/
 __pycache__/
 
+build/*
+epviz.spec
 *.idea
