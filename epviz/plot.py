@@ -4,7 +4,7 @@ from os import path
 import sys
 import os
 
-from epviz.signal_loading import ChannelInfo, ChannelOptions
+from epviz.signal_loading import ChannelInfo, ChannelOptions, EpochAnnotChooser
 from epviz.filtering import FilterOptions, FilterInfo
 from epviz.predictions import PredictionOptions, PredictionInfo
 from epviz.spectrogram_window import SpecOptions, SpecInfo
@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog,
                              QMessageBox, QWidget,
                              QPushButton, QCheckBox, QLabel, QInputDialog,
                              QSlider, QGridLayout, QDockWidget, QListWidget,
-                             QListWidgetItem, QLineEdit, QSpinBox,
+                             QListWidgetItem, QLineEdit, QSpinBox, QDialog,
                              QTimeEdit, QComboBox, QFrame, QStyle, QDesktopWidget)
 from PyQt5.QtGui import QBrush, QColor, QPen, QFont, QDesktopServices
 import pyqtgraph as pg
@@ -190,16 +190,43 @@ class MainPage(QMainWindow):
         ud += 1
 
 
-        test2 = QLabel("", self)
-        grid_lt.addWidget(test2, ud, 0)
-        ud += 1
+        # test2 = QLabel("", self)
+        # grid_lt.addWidget(test2, ud, 0)
+        # ud += 1
 
         grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
         ud += 1
 
-        test11 = QLabel("", self)
-        grid_lt.addWidget(test11, ud, 0)
+
+        # EPOCHING
+        grid_lt.addWidget(QLabel("Epoch Mode", self), ud, 0)
+        self.epoch_checkbox = QCheckBox(self)
+        grid_lt.addWidget(self.epoch_checkbox, ud, 1)
         ud += 1
+
+
+        grid_lt.addWidget(QLabel("Epoch Size", self), ud, 0)
+        self.epoch_size_combobox = QComboBox()
+        self.epoch_size_combobox.addItems(["1s", "2s", "3s", "5s", "10s", "15s", "20s"])
+        self.epoch_size_combobox.setCurrentIndex(2)
+        grid_lt.addWidget(self.epoch_size_combobox, ud, 1)
+        ud += 1
+
+
+        self.epoch_selector = QPushButton("Choose Annotations for Epochs", self)
+        grid_lt.addWidget(self.epoch_selector, ud, 0, 1, 2)
+        ud += 1
+
+
+
+
+        # OTHER
+        grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
+        ud += 1
+
+        #test11 = QLabel("", self)
+        #grid_lt.addWidget(test11, ud, 0)
+        #ud += 1
 
         self.button_print = QPushButton("Export to .png", self)
         self.button_print.setToolTip("Click to print a copy of the graph")
@@ -461,6 +488,7 @@ class MainPage(QMainWindow):
         self.button_amp_inc.clicked.connect(self.inc_amp)
         self.button_amp_dec.clicked.connect(self.dec_amp)
         self.ws_combobox.currentIndexChanged['int'].connect(self.chg_window_size)
+        self.epoch_selector.clicked.connect(self.change_epochs)
         self.button_print.clicked.connect(self.print_graph)
         self.button_save_edf.clicked.connect(self.save_to_edf)
         self.btn_help.clicked.connect(self.open_help)
@@ -1765,6 +1793,27 @@ class MainPage(QMainWindow):
             self.preds_win_open = 1
             self.pred_ops = PredictionOptions(self.pi, self)
             self.pred_ops.show()
+
+    def change_epochs(self):
+        """
+        Change the timepoints being used for epoch onsets
+        """
+        if not hasattr(self, 'edf_info'):
+            self.throw_alert("Must load in an edf file first")
+            return
+
+        if not len(self.edf_info.annotations[0]) > 0:
+            self.throw_alert("Must contain annotations")
+            return
+
+        annots = self.edf_info.annotations[2]
+        annot_dlg = EpochAnnotChooser(annots)
+        if annot_dlg.exec_() == QDialog.Accepted:
+            print("Chosen annots: ", annot_dlg.selected_annots)
+
+
+
+
 
     def make_spec_plot(self):
         """ Creates the spectrogram plot.

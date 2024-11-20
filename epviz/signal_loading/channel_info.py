@@ -108,6 +108,10 @@ class ChannelInfo():
         self.fs = 0
         self.edf_fn = ""
 
+        self.epoch_mode = False
+        self.epoch_dur = 1
+        self.epoch_idx = []
+
         self.total_nchns = 0
         self.list_of_chns = []
         self.converted_chn_names = []
