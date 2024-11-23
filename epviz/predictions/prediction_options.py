@@ -141,6 +141,11 @@ class PredictionOptions(QWidget):
 
         ud += 1
 
+        # Deep learning model load
+        self.cbox_dl_model = QCheckBox("Run Deep Learning Model",self)
+
+
+
         btn_exit = QPushButton('Ok', self)
         btn_exit.clicked.connect(self.check)
         layout.addWidget(btn_exit,ud,4)

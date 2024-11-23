@@ -35,6 +35,8 @@ class ChannelOptions(QWidget):
         self.data = data
         self.parent = parent
         self.organize_win_open = 0
+        self.plot_bip_from_ar = 0
+        self.labels_fn = ""
         self.setup_ui()
 
     def setup_ui(self):
@@ -470,8 +472,14 @@ class ChannelOptions(QWidget):
         if (self.ar1020 and self.cbox_bip.isChecked()):# or
             #self.ar1010 and self.cbox_bip1010.isChecked()):
             plot_bip_from_ar = 1
+        self.plot_bip_from_ar = plot_bip_from_ar
         mont_type, txt_file_name = self._get_mont_type()
-        self.data.prepare_to_plot(idxs, self.parent, mont_type, plot_bip_from_ar, txt_file_name)
+
+        self.data.mon_type = mont_type
+        self.data.label_txt_fn = txt_file_name
+        self.data.plot_bip_from_ar = plot_bip_from_ar
+        #self.data.prepare_to_plot(idxs, self.parent, mont_type, plot_bip_from_ar, txt_file_name)
+        self.data.prepare_to_plot(idxs, self.parent, mont_type)
         # check if multi-chn pred and number of chns match
         self.check_multi_chn_preds()
         return 0

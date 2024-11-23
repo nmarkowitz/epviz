@@ -107,10 +107,13 @@ class ChannelInfo():
         self.labels2chns = []
         self.fs = 0
         self.edf_fn = ""
+        self.edf_handle = None
+
+        self.label_txt_fn = ""
 
         self.epoch_mode = False
         self.epoch_dur = 1
-        self.epoch_idx = []
+        self.epoch_onsets = []
 
         self.total_nchns = 0
         self.list_of_chns = []
@@ -289,7 +292,7 @@ class ChannelInfo():
                             ret[i] = 0
         return ret
 
-    def prepare_to_plot(self, idxs, parent, mont_type, plot_bip_from_ar = 0, txt_file_name = ""):
+    def prepare_to_plot(self, idxs, parent, mont_type, start_idx=None, stop_idx=None, plot_bip_from_ar = 0, txt_file_name = ""):
         """
         Prepares everything needed to plot the data.
 
@@ -304,7 +307,21 @@ class ChannelInfo():
                 from average reference data
             txt_file_name - name of text file if needed
         """
-        f = pyedflib.EdfReader(self.edf_fn)
+
+        if self.edf_handle is None:
+            f = pyedflib.EdfReader(self.edf_fn)
+            self.edf_handle = f
+        else:
+            f = self.edf_handle
+
+        plot_bip_from_ar = self.plot_bip_from_ar
+        txt_file_name = self.label_txt_fn
+
+        if start_idx is not None and stop_idx is not None:
+            n_samples = stop_idx - start_idx
+        else:
+            start_idx = 0
+            n_samples = f.getNSamples()[0]
 
         # Things needed to plot - reset each time
         # see if channels are already organized ie if organize is true
@@ -351,9 +368,9 @@ class ChannelInfo():
         ar1010 = 0
         bip1010 = 0
         self.nchns_to_plot = len(idxs)
-        self.data_to_plot = np.zeros((self.nchns_to_plot, parent.edf_info_temp.nsamples[0]))
+        self.data_to_plot = np.zeros((self.nchns_to_plot, n_samples))
         if plot_bip_from_ar and self.can_do_bip_ar_idx(idxs,1,0):
-            self.data_to_plot = np.zeros((self.nchns_to_plot - 1, parent.edf_info_temp.nsamples[0]))
+            self.data_to_plot = np.zeros((self.nchns_to_plot - 1, n_samples))
         c = 0
 
         if plot_bip_from_ar:
@@ -374,7 +391,7 @@ class ChannelInfo():
                     for k in range(18):
                         idx0 = bip_idx[k,0]
                         idx1 = bip_idx[k,1]
-                        self.data_to_plot[k,:] = f.readSignal(int(idx0)) - f.readSignal(int(idx1))
+                        self.data_to_plot[k,:] = f.readSignal(int(idx0), start_idx, n_samples) - f.readSignal(int(idx1), start_idx, n_samples)
                         self.labels_to_plot.append(self.labelsBIP1020[k])
                         self.colors.append(self._get_color(self.labelsBIP1020[k]))
                         c += 1
@@ -463,7 +480,7 @@ class ChannelInfo():
                     if self.converted_chn_names[idxs[k]] == labels[i]:
                         self.labels_to_plot.append(labels[i])
                         self.colors.append(self._get_color(labels[i]))
-                        self.data_to_plot[c,:] = f.readSignal(idxs[k]) # data[idxs[k],:]
+                        self.data_to_plot[c,:] = f.readSignal(idxs[k], start_idx, n_samples) # data[idxs[k],:]
                         c += 1
                         idxs.pop(k)
                         k = len(idxs)
@@ -478,6 +495,6 @@ class ChannelInfo():
             for k in range(len(idxs)):
                 self.labels_to_plot.insert(1,self.converted_chn_names[idxs[k]])
                 self.colors.insert(0, self._get_color(self.converted_chn_names[idxs[k]]))
-                self.data_to_plot[c,:] = f.readSignal(idxs[k]) # data[idxs[k],:]
+                self.data_to_plot[c,:] = f.readSignal(idxs[k], start_idx, n_samples) # data[idxs[k],:]
                 c -= 1
         self.fs = 2

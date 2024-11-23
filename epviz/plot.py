@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog,
                              QSlider, QGridLayout, QDockWidget, QListWidget,
                              QListWidgetItem, QLineEdit, QSpinBox, QDialog,
                              QTimeEdit, QComboBox, QFrame, QStyle, QDesktopWidget)
-from PyQt5.QtGui import QBrush, QColor, QPen, QFont, QDesktopServices
+from PyQt5.QtGui import QBrush, QColor, QPen, QFont, QDesktopServices, QIntValidator
 import pyqtgraph as pg
 from pyqtgraph.dockarea import *
 
@@ -199,25 +199,38 @@ class MainPage(QMainWindow):
 
 
         # EPOCHING
-        grid_lt.addWidget(QLabel("Epoch Mode", self), ud, 0)
+        grid_lt.addWidget(QLabel("Full Recording", self), ud, 0)
         self.epoch_checkbox = QCheckBox(self)
+        self.epoch_checkbox.setChecked(True)
         grid_lt.addWidget(self.epoch_checkbox, ud, 1)
         ud += 1
 
 
-        grid_lt.addWidget(QLabel("Epoch Size", self), ud, 0)
-        self.epoch_size_combobox = QComboBox()
-        self.epoch_size_combobox.addItems(["1s", "2s", "3s", "5s", "10s", "15s", "20s"])
-        self.epoch_size_combobox.setCurrentIndex(2)
-        grid_lt.addWidget(self.epoch_size_combobox, ud, 1)
+        # Number of windows for epoching
+        n_windows_label = QLabel("Number of Windows", self)
+        n_windows_label.setMaximumWidth(150)
+        grid_lt.addWidget(n_windows_label, ud, 0)
+        self.epoch_n_windows = QLineEdit(self)
+        self.epoch_n_windows.setWhatsThis("Number of windows to pad annotation with")
+        self.epoch_n_windows.setFixedWidth(100)
+        self.epoch_n_windows.setValidator(QIntValidator())  # Only allows integer input
+        grid_lt.addWidget(self.epoch_n_windows, ud, 1)
+        ud += 1
+
+        # Length of windows for epoching
+        epoch_dur_label = QLabel("Duration of window (s)", self)
+        epoch_dur_label.setMaximumWidth(150)
+        grid_lt.addWidget(epoch_dur_label, ud, 0)
+        self.epoch_window_dur = QLineEdit(self)
+        self.epoch_window_dur.setFixedWidth(100)
+        self.epoch_window_dur.setValidator(QIntValidator())  # Only allows integer input
+        grid_lt.addWidget(self.epoch_window_dur, ud, 1)
         ud += 1
 
 
         self.epoch_selector = QPushButton("Choose Annotations for Epochs", self)
         grid_lt.addWidget(self.epoch_selector, ud, 0, 1, 2)
         ud += 1
-
-
 
 
         # OTHER
@@ -1314,12 +1327,20 @@ class MainPage(QMainWindow):
 
     def call_move_plot(self, right, num_move, print_graph=0):
         """ Helper function to call move_plot for various buttons.
+        right - 0 for left, 1 for right
+        num_move - integer in seconds to move by
+        print_graph - whether or not to print a copy of the graph
         """
         if self.init == 1:
+
+            # Check if filtering option on
             if self.filter_checked == 1:
-                self.move_plot(right, num_move, self.ylim[1], print_graph)
+                ylim = self.ylim[1]
             else:
-                self.move_plot(right, num_move, self.ylim[0], print_graph)
+                ylim = self.ylim[0]
+
+            self.move_plot(right, num_move, ylim, print_graph)
+
 
     def move_plot(self, right, num_move, y_lim, print_graph):
         """
@@ -1339,6 +1360,12 @@ class MainPage(QMainWindow):
                               fs, self.ci.nchns_to_plot)
             self.pi.preds_to_plot = self.pi.preds
 
+        # Update data stored in ChannelInfo, self.ci.data_to_plot
+        start_idx = self.count * int(fs)
+        stop_idx = (self.count + self.window_size) * int(fs)
+        n_samples = stop_idx - start_idx
+        self.ci.prepare_to_plot(self.ci.list_of_chns, self, self.ci.mont_type, start_idx=start_idx, stop_idx=stop_idx)
+
         if right == 0 and self.count - num_move >= 0:
             self.count = self.count - num_move
         elif (right == 1 and (self.count + num_move +
@@ -1357,8 +1384,9 @@ class MainPage(QMainWindow):
             plot_data[plot_data > 3 * stddev] = 3 * stddev  # float('nan') # clip amplitude
             plot_data[plot_data < -3 * stddev] = -3 * stddev
         else:
-            plot_data += self.ci.data_to_plot[:,
-                    self.count * int(fs):(self.count + self.window_size) * int(fs)]
+            # plot_data += self.ci.data_to_plot[:,
+            #         self.count * int(fs):(self.count + self.window_size) * int(fs)]
+            plot_data += self.ci.data_to_plot
             stddev = np.std(plot_data)
             plot_data[plot_data > 5 * stddev] = 5 * stddev  # float('nan') # clip amplitude
             plot_data[plot_data < -5 * stddev] = -5 * stddev
@@ -1772,9 +1800,10 @@ class MainPage(QMainWindow):
                 self.ci.data_to_plot[:,self.count*fs:(self.count +
                 self.window_size)*fs].shape)):
             self.filtered_data = np.zeros((self.ci.nchns_to_plot,self.window_size * fs))
-        filt_window_size = filter_data(
-            self.ci.data_to_plot[:, self.count * fs:(self.count + self.window_size)*fs],
-                            fs, self.fi, self.argv.show)
+        # filt_window_size = filter_data(
+        #     self.ci.data_to_plot[:, self.count * fs:(self.count + self.window_size)*fs],
+        #                     fs, self.fi, self.argv.show)
+        filt_window_size = filter_data(self.ci.data_to_plot,fs, self.fi, self.argv.show)
         filt_window_size = np.array(filt_window_size)
         self.filtered_data = filt_window_size
 
@@ -1806,13 +1835,14 @@ class MainPage(QMainWindow):
             self.throw_alert("Must contain annotations")
             return
 
+        times = self.edf_info.annotations[0]
         annots = self.edf_info.annotations[2]
-        annot_dlg = EpochAnnotChooser(annots)
+        annot_dlg = EpochAnnotChooser(annots, times)
         if annot_dlg.exec_() == QDialog.Accepted:
             print("Chosen annots: ", annot_dlg.selected_annots)
-
-
-
+            self.ci.epoch_onsets = [x[1] for x in annot_dlg.selected_annots]
+        else:
+            return
 
 
     def make_spec_plot(self):
