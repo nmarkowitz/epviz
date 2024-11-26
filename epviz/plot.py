@@ -227,11 +227,23 @@ class MainPage(QMainWindow):
         grid_lt.addWidget(self.epoch_window_dur, ud, 1)
         ud += 1
 
-
+        # Button to select annotation
         self.epoch_selector = QPushButton("Choose Annotations for Epochs", self)
         grid_lt.addWidget(self.epoch_selector, ud, 0, 1, 2)
         ud += 1
 
+        # Text displaying annotation chosen
+        self.ann_chosen_lbl_annot = QLabel("Annotation: NA", self)
+        grid_lt.addWidget(self.ann_chosen_lbl_annot, ud, 0, 1, 2)
+        ud += 1
+        self.ann_chosen_lbl_time = QLabel("Time (s): NA", self)
+        grid_lt.addWidget(self.ann_chosen_lbl_time, ud, 0, 1, 2)
+        ud += 1
+
+        # "Apply" button to toggle epoch settings
+        self.epoch_apply = QPushButton("Apply Epoch Settings", self)
+        grid_lt.addWidget(self.epoch_apply, ud, 0, 1, 2)
+        ud += 1
 
         # OTHER
         grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
@@ -502,6 +514,7 @@ class MainPage(QMainWindow):
         self.button_amp_dec.clicked.connect(self.dec_amp)
         self.ws_combobox.currentIndexChanged['int'].connect(self.chg_window_size)
         self.epoch_selector.clicked.connect(self.change_epochs)
+        self.epoch_apply.clicked.connect(self.epoch_apply_callback)
         self.button_print.clicked.connect(self.print_graph)
         self.button_save_edf.clicked.connect(self.save_to_edf)
         self.btn_help.clicked.connect(self.open_help)
@@ -536,6 +549,7 @@ class MainPage(QMainWindow):
         self.window_size = 10  # number of seconds to display at a time
         self.filter_checked = 0  # whether or not to plot filtered data
         self.ylim = [150, 100]  # ylim for unfiltered and filtered data
+        self.minmax_time = [0, None]  # minimum and maximum span of time that can be plotted
         self.max_channels = 70 # maximum channels you can plot at once
         self.filter_win_open = 0  # whether or not filter options window is open
         self.preds_win_open = 0  # whether or not the predictions window is open
@@ -710,6 +724,7 @@ class MainPage(QMainWindow):
             # the user selects signals to plot
             self.max_time_temp = int(
                 self.edf_info_temp.nsamples[0] / self.edf_info_temp.fs)
+            self.max_time = self.max_time_temp
             self.ci_temp = ChannelInfo()  # holds channel information
             self.ci_temp.chns2labels = self.edf_info_temp.chns2labels
             self.ci_temp.labels2chns = self.edf_info_temp.labels2chns
@@ -767,6 +782,9 @@ class MainPage(QMainWindow):
         ann = self.edf_info.annotations
         if len(ann[0]) > 0 and ann[2][0] == "filtered" or self.filter_checked == 1:
             self.cbox_filter.setChecked(True)  # must be set after init = 1
+
+
+
 
     def ann_clicked(self):
         """ Moves the plot when annotations in the dock are clicked.
@@ -1366,11 +1384,15 @@ class MainPage(QMainWindow):
         n_samples = stop_idx - start_idx
         self.ci.prepare_to_plot(self.ci.list_of_chns, self, self.ci.mont_type, start_idx=start_idx, stop_idx=stop_idx)
 
-        if right == 0 and self.count - num_move >= 0:
+        if right == 0 and self.count - num_move >= 0 and not self.ci.epoch_mode:
             self.count = self.count - num_move
-        elif (right == 1 and (self.count + num_move +
-                self.window_size <= self.ci.data_to_plot.shape[1] / int(fs))):
+        elif (right == 1 and (self.count + num_move + self.window_size <= self.max_time)) and not self.ci.epoch_mode:
             self.count = self.count + num_move
+        elif self.ci.epoch_mode and right==0 and self.count - num_move >= self.minmax_time[0]:
+            self.count = self.count - num_move
+        elif self.ci.epoch_mode and right==1 and self.count + num_move + self.window_size <= self.minmax_time[1]:
+            self.count = self.count + num_move
+
         self.slider.setValue(self.count)
         t = get_time(self.count)
         self.time_lbl.setText(t)
@@ -1840,9 +1862,48 @@ class MainPage(QMainWindow):
         annot_dlg = EpochAnnotChooser(annots, times)
         if annot_dlg.exec_() == QDialog.Accepted:
             print("Chosen annots: ", annot_dlg.selected_annots)
-            self.ci.epoch_onsets = [x[1] for x in annot_dlg.selected_annots]
+            annot_txt = annot_dlg.selected_annots[0][0]
+            annot_time = annot_dlg.selected_annots[0][1]
+            self.ann_chosen_lbl_annot.setText("Annotation: " + annot_txt)
+            self.ann_chosen_lbl_time.setText("Time (s): " + str(round(annot_time, 2)))
+            self.ci.chosen_annot = annot_dlg.selected_annots[0]
+            #self.ci.epoch_onsets = [x[1] for x in annot_dlg.selected_annots]
+
         else:
             return
+
+    def epoch_apply_callback(self):
+        """
+        Change parameters for whether viewer displays full
+        recording or epochs around an annotation
+        """
+
+        if self.epoch_checkbox.isChecked():
+            self.ci.epoch_mode = False
+            self.minmax_time = [0, self.max_time]
+            self.call_move_plot(0, 0)
+            return
+        else:
+            n_windows = self.epoch_n_windows.text()
+            epoch_dur = self.epoch_window_dur.text()
+            chosen_annot_onset = self.ci.chosen_annot[1]
+            if n_windows == "" or epoch_dur == "":
+                self.throw_alert("To apply epoch mode a number of window and duration of window must be specified")
+                return
+
+            n_windows = int(n_windows)
+            epoch_dur = float(epoch_dur)
+            onsets = np.arange(chosen_annot_onset - n_windows * epoch_dur, chosen_annot_onset + (n_windows+1) * epoch_dur, epoch_dur)
+            self.minmax_time = [onsets[0], onsets[-1]+epoch_dur]
+            self.ci.epoch_onsets = onsets
+            self.ci.epoch_mode = True
+
+            if chosen_annot_onset + self.window_size > self.max_time:
+                self.count = int(self.ci.epoch_onsets[0])
+            else:
+                self.count = int(chosen_annot_onset)
+            self.call_move_plot(0,0)
+
 
 
     def make_spec_plot(self):

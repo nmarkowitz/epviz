@@ -114,6 +114,7 @@ class ChannelInfo():
         self.epoch_mode = False
         self.epoch_dur = 1
         self.epoch_onsets = []
+        self.chosen_annot = []
 
         self.total_nchns = 0
         self.list_of_chns = []
@@ -318,7 +319,7 @@ class ChannelInfo():
         txt_file_name = self.label_txt_fn
 
         if start_idx is not None and stop_idx is not None:
-            n_samples = stop_idx - start_idx
+            n_samples = int(stop_idx - start_idx)
         else:
             start_idx = 0
             n_samples = f.getNSamples()[0]
