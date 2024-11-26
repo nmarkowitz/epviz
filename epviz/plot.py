@@ -576,6 +576,7 @@ class MainPage(QMainWindow):
         self.zoom_roi = None # zoomROI to be updated
         self.spec_roi_val = [0,256] # size of the spec roi object
         self.spec_select_time_rect = None # the ROI to be updated
+        self.epoch_lines = []
 
     def closeEvent(self, event):
         """ Called when the main window is closed to act as a destructor and close
@@ -1327,11 +1328,19 @@ class MainPage(QMainWindow):
         """ Used for the "jump to" button to update self.count to the user's input
         """
         if self.init == 1:
+            min_time = self.minmax_time[0]
+            if self.minmax_time is None:
+                max_time = self.max_time
+            else:
+                max_time = self.minmax_time[1]
+
             num, ok = QInputDialog.getInt(self, "Jump to...", "Enter a time in seconds:",
-                                          0, 0, self.max_time)
+                                          min_time, min_time, max_time)
             if ok:
-                if num > self.max_time - self.window_size:
-                    num = self.max_time - self.window_size
+                if num > max_time - self.window_size:
+                    num = max_time - self.window_size
+                elif num < min_time:
+                    num = min_time
                 self.count = num
                 self.call_move_plot(0, 0)
 
@@ -1370,6 +1379,7 @@ class MainPage(QMainWindow):
             y_lim - the values for the y_limits of the plot
             print_graph - whether or not to print a copy of the graph
         """
+
         black_pen = QPen(QColor(0,0,0),3)
         fs = int(self.edf_info.fs)
         if not self.argv.predictions_file is None and self.init == 0:
@@ -1878,9 +1888,20 @@ class MainPage(QMainWindow):
         recording or epochs around an annotation
         """
 
+        fs = int(self.edf_info.fs)
+
         if self.epoch_checkbox.isChecked():
             self.ci.epoch_mode = False
             self.minmax_time = [0, self.max_time]
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.max_time - self.window_size)
+            self.slider.setValue(self.count)
+
+            for l in self.epoch_lines:
+                self.main_plot.removeItem(l)
+            self.epoch_lines.clear()
+
+
             self.call_move_plot(0, 0)
             return
         else:
@@ -1898,10 +1919,22 @@ class MainPage(QMainWindow):
             self.ci.epoch_onsets = onsets
             self.ci.epoch_mode = True
 
+            self.slider.setMinimum(int(self.minmax_time[0]))
+            self.slider.setMaximum(int(self.minmax_time[1]) - self.window_size)
+
             if chosen_annot_onset + self.window_size > self.max_time:
                 self.count = int(self.ci.epoch_onsets[0])
             else:
                 self.count = int(chosen_annot_onset)
+
+            # Add vertical lines to divide epochs
+            for t in onsets:
+                pos = (t - self.minmax_time[0]) * fs
+                vert_line = pg.InfiniteLine(pos=pos, angle=90, movable=False, pen=pg.mkPen(color=(0,0,0), width=1))
+                print(t)
+                self.main_plot.addItem(vert_line)
+                self.epoch_lines.append(vert_line)
+
             self.call_move_plot(0,0)
 
 
