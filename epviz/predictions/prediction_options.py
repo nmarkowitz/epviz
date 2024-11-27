@@ -176,7 +176,7 @@ class PredictionOptions(QWidget):
     def load_pt_data(self):
         """ Load data for prediction.
         """
-        ptfile_fn = QFileDialog.getOpenFileName(self, 'Open file','.','Pytorch files (*.pt)')
+        ptfile_fn = QFileDialog.getOpenFileName(self, 'Open file','.','Pytorch and Numpy files (*.pt *.npy)')
         if ptfile_fn[0] is None or len(ptfile_fn[0]) == 0:
             return
         if len(ptfile_fn[0].split('/')[-1]) < 18:
@@ -206,7 +206,7 @@ class PredictionOptions(QWidget):
     def load_preds(self):
         """ Loads predictions
         """
-        preds_fn = QFileDialog.getOpenFileName(self, 'Open predictions','.','Pytorch files (*.pt)')
+        preds_fn = QFileDialog.getOpenFileName(self, 'Open predictions','.','Pytorch files (*.pt *.npy)')
         if preds_fn[0] is None or len(preds_fn[0]) == 0:
             return
         if (self.data.set_preds(preds_fn[0], self.parent.max_time,

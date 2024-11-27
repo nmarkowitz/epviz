@@ -1819,7 +1819,7 @@ class MainPage(QMainWindow):
             if len(ann[0]) > 0 and ann[2][0] == "filtered":
                 self.filter_checked = 1
                 cbox.setChecked(True)
-            self.call_move_plot(1, 0)
+            self.call_move_plot(0, 0)
         elif self.init == 0 and cbox.isChecked():
             cbox.setChecked(False)
 
@@ -1973,7 +1973,9 @@ class MainPage(QMainWindow):
             self.spec_roi_val[1] = 100 + self.spec_roi_val[0]
 
         self.spec_select_time_rect.setRegion((self.spec_roi_val[0], self.spec_roi_val[1]))
-        bounds = bounds + self.count * fs
+        bounds = list(bounds)
+        bounds[0] = bounds[0] + self.count * fs
+        bounds[1] = bounds[1] + self.count * fs
         # f, Pxx_den = signal.welch(self.si.data[int(bounds[0]):int(bounds[1])], fs)
         f, Pxx_den = signal.periodogram(self.si.data[int(bounds[0]):int(bounds[1])], fs)
         pen = pg.mkPen(color=(178, 7, 245), width=3, style=QtCore.Qt.SolidLine)

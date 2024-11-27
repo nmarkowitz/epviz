@@ -154,7 +154,10 @@ class ChannelOptions(QWidget):
         chns = self.data.chns2labels
         lbls = self.data.labels2chns
         self.data.pred_chn_data = []
-        edf_reader_obj = pyedflib.EdfReader(self.data.edf_fn)
+        if hasattr(self.data, 'edf_handle') and self.data.edf_handle is not None:
+            edf_reader_obj = self.data.edf_handle
+        else:
+            edf_reader_obj = pyedflib.EdfReader(self.data.edf_fn)
         # if len(self.unprocessed_data) > 0: # reset predicted
         #    self.parent.predicted = 0
         if len(chns) == 0:
