@@ -8,6 +8,7 @@ class PredictionInfo():
     def __init__(self):
         self.ready = 0 # whether both model and data have been loaded
         self.model = [] # loaded model
+        self.is_dl_model = False
         self.data = [] # loaded data for model
         self.model_preds = [] # predictions from model/data
         self.preds = [] # loaded predictions

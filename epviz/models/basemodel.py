@@ -26,3 +26,21 @@ class BaseModel():
             y_hat - maximum class label length T torch.tensor
         """
         raise(NotImplementedError)
+
+
+
+class BaseDLModel():
+
+    def __init__(self, **kwargs):
+        self.model = None
+        self.params = None
+
+    def predict(self, input_data, **kwargs):
+        """
+        inputs:
+            dataset - a dataset containing data
+
+        outputs:
+            model - a trained model
+        """
+        raise(NotImplementedError)

@@ -1,7 +1,8 @@
 """ Module for testing the filter options window """
 import sys
 import os.path as op
-sys.path.append(op.join( op.dirname( op.dirname(__file__)), "models"))
+sys.path.append(op.join( op.dirname( op.dirname(__file__)), "epviz"))
+#sys.path.append(op.dirname( op.dirname(__file__)))
 import unittest
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
@@ -12,8 +13,8 @@ from epviz.predictions.prediction_info import PredictionInfo
 from epviz.plot import MainPage
 from epviz.plot import check_args, get_args
 
-from epviz import models
-sys.path.append(op.dirname(models.__file__))
+#from epviz import models
+#sys.path.append(op.dirname(models.__file__))
 
 import torch
 import numpy as np
@@ -28,8 +29,8 @@ class TestPrediction(unittest.TestCase):
         test_file_dir = op.join(pdir, "test_files")
         self.TEST_FN = op.join(test_file_dir, "chb.edf")
         self.TEST_MODELS = [
-            op.join(test_file_dir, "chb_model.skops"),
             op.join(test_file_dir, "chb_model_skl_1.5.2.skops"),
+            op.join(test_file_dir, "chb_model.skops"),
             op.join(test_file_dir, "chb_model.pt")
         ]
         self.TEST_MODEL = None #op.join(test_file_dir, "chb_model.skops")
@@ -51,9 +52,10 @@ class TestPrediction(unittest.TestCase):
         for model_fn in self.TEST_MODELS:
             try:
                 if model_fn.endswith(".skops"):
-                    model = load(model_fn)
+                    model = load(model_fn, trusted=["epviz.models.sklearnmodels.RandomForest"])
                 else:
                     model = torch.load(model_fn)
+                self.TEST_MODEL = model_fn
                 break
             except:
                 pass
