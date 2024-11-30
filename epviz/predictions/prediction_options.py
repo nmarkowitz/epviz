@@ -2,8 +2,9 @@
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import (QFileDialog, QWidget, QPushButton, QCheckBox,
                                 QLabel, QGridLayout, QFrame, QRadioButton,
-                                QGroupBox, QHBoxLayout)
-
+                                QGroupBox, QHBoxLayout, QVBoxLayout,
+                                QTreeWidget, QTreeWidgetItem, QDialog)
+from PyQt5.QtCore import Qt
 from matplotlib.backends.qt_compat import QtWidgets
 
 class PredictionOptions(QWidget):
@@ -138,13 +139,31 @@ class PredictionOptions(QWidget):
         hbox.addWidget(self.radio_multiclass_preds)
         groupbox_binary_edit_preds.setLayout(hbox)
         layout.addWidget(groupbox_binary_edit_preds, ud, 3)
-
         ud += 1
 
-        # Deep learning model load
-        self.cbox_dl_model = QCheckBox("Run Deep Learning Model",self)
+        # Deep Learning Models
+        self.cbox_dl_models = QCheckBox("Plot deep learning model predictions", self)
+        self.cbox_dl_models.setChecked(False)
+        self.cbox_dl_models.toggled.connect(self.dl_checked)
+        self.cbox_dl_models.setToolTip("Click to run and plot deep learning model predictions")
+        layout.addWidget(self.cbox_dl_models, ud, 0)
+        #ud += 1
+
+        button_select_dl_model = QPushButton("Select DL model",self)
+        button_select_dl_model.clicked.connect(self.select_dl_model)
+        button_select_dl_model.setToolTip("Click to select Deep Learning model")
+        layout.addWidget(button_select_dl_model,ud,1)
+        ud += 1
+
+        # Add text to display model and params chosen for deep learning model
+        self.label_dl_model = QLabel("No DL model selected.", self)
+        layout.addWidget(self.label_dl_model, ud, 1)
+        self.label_dl_model_params = QLabel("", self)
+        layout.addWidget(self.label_dl_model_params, ud, 2)
+        ud += 1
 
 
+        ud += 1
 
         btn_exit = QPushButton('Ok', self)
         btn_exit.clicked.connect(self.check)
@@ -164,12 +183,26 @@ class PredictionOptions(QWidget):
         if cbox.isChecked():
             if self.cbox_preds.isChecked():
                 self.cbox_preds.setChecked(False)
+            if self.cbox_dl_models.isChecked():
+                self.cbox_dl_models.setChecked(False)
 
     def preds_checked(self):
         """ Called when the predictions cbox is checked.
         """
         cbox = self.sender()
         if cbox.isChecked():
+            if self.cbox_model.isChecked():
+                self.cbox_model.setChecked(False)
+            if self.cbox_dl_models.isChecked():
+                self.cbox_dl_models.setChecked(False)
+
+    def dl_checked(self):
+        """ Called when the deep learning cbox is checked.
+        """
+        cbox = self.sender()
+        if cbox.isChecked():
+            if self.cbox_preds.isChecked():
+                self.cbox_preds.setChecked(False)
             if self.cbox_model.isChecked():
                 self.cbox_model.setChecked(False)
 
@@ -319,6 +352,21 @@ class PredictionOptions(QWidget):
         self.parent.preds_win_open = 0
         event.accept()
 
+    def select_dl_model(self):
+        """ Select a deep learning model
+        """
+        self.dl_model_selector = DLModelSelector()
+        #self.dl_model_selector.show()
+        if self.dl_model_selector.exec_() == QDialog.Accepted:
+            model, params = self.dl_model_selector.selected_model
+            #self.data.set_dl_model(self.dl_model_selector.selected_model)
+            self.label_dl_model.setText(model)
+            self.label_dl_model_params.setText(params)
+            self.cbox_dl_models.setChecked(True)
+            self.cbox_model.setChecked(False)
+            self.cbox_preds.setChecked(False)
+
+
 class QHLine(QFrame):
     """ Class for horizontal line widget """
     def __init__(self):
@@ -326,3 +374,72 @@ class QHLine(QFrame):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
+
+
+class DLModelSelector(QDialog):
+    """ Class for deep learning model selector """
+    def __init__(self):
+        super().__init__()
+        self.selected_model = []
+        self.initUI()
+
+    def initUI(self):
+
+        from .deepsoz import get_deepsoz_models_and_params
+        dl_models = get_deepsoz_models_and_params()
+
+        # Set up the layout
+        layout = QVBoxLayout(self)
+
+        # Create a QTreeWidget
+        self.treeWidget = QTreeWidget(self)
+        self.treeWidget.setHeaderHidden(True)  # Hides the header
+
+        for model_name, model_params in dl_models.items():
+            model_item = QTreeWidgetItem(self.treeWidget, [model_name])
+            model_item.setFlags(model_item.flags() & ~Qt.ItemIsSelectable)  # Make parent unselectable
+            for param in model_params:
+                param_item = QTreeWidgetItem(model_item, [param])
+
+        # Add the tree widget to the layout
+        layout.addWidget(self.treeWidget)
+
+        # Create a horizontal layout for the buttons
+        ok_cancel_layout = QHBoxLayout()
+
+        # Create OK and Cancel buttons
+        ok_button = QPushButton("OK", self)
+        cancel_button = QPushButton("Cancel", self)
+        ok_button.clicked.connect(self.return_selection)
+        cancel_button.clicked.connect(self.reject)
+
+        # Add buttons to the horizontal layout
+        ok_cancel_layout.addWidget(ok_button)
+        ok_cancel_layout.addWidget(cancel_button)
+
+        # Add the button layout to the main layout
+        layout.addLayout(ok_cancel_layout)
+
+        self.setLayout(layout)
+        self.setWindowTitle("Select a model and parameters")
+
+    def return_selection(self):
+        selected_items = self.treeWidget.selectedItems()
+        # if not selected_items:
+        #     QMessageBox.warning(self, "No Selection", "Please select a child row.")
+        #     return
+        if not selected_items:
+            self.reject()
+            return
+
+        selected_item = selected_items[0]
+        parent_item = selected_item.parent()
+        # if not parent_item:
+        #     QMessageBox.warning(self, "Invalid Selection", "Please select a child row, not a parent.")
+        #     return
+
+        parent_text = parent_item.text(0)
+        child_text = selected_item.text(0)
+        self.selected_model = [parent_text, child_text]
+        #print(f"Selected Parent: {parent_text}, Child: {child_text}")
+        self.accept()  # Close the dialog with QDialog.Accepted

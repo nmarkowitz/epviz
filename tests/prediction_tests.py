@@ -18,6 +18,7 @@ sys.path.append(op.dirname(models.__file__))
 import torch
 import numpy as np
 import datetime
+from skops.io import load
 
 
 app = QApplication([])
@@ -26,7 +27,12 @@ class TestPrediction(unittest.TestCase):
         pdir = op.dirname(op.dirname(op.abspath(__file__)))
         test_file_dir = op.join(pdir, "test_files")
         self.TEST_FN = op.join(test_file_dir, "chb.edf")
-        self.TEST_MODEL = op.join(test_file_dir, "chb_model.skops")
+        self.TEST_MODELS = [
+            op.join(test_file_dir, "chb_model.skops"),
+            op.join(test_file_dir, "chb_model_skl_1.5.2.skops"),
+            op.join(test_file_dir, "chb_model.pt")
+        ]
+        self.TEST_MODEL = None #op.join(test_file_dir, "chb_model.skops")
         self.TEST_DATA = op.join(test_file_dir, "chb_features.npy")
         self.TEST_PREDS = op.join(test_file_dir, "chb_preds.npy")
         self.TEST_PREDS_MULTICLASS = op.join(test_file_dir, "chb_multiclass.npy")
@@ -40,6 +46,18 @@ class TestPrediction(unittest.TestCase):
         self._load_signals()
         self.preds_info = PredictionInfo()
         self.ui = PredictionOptions(self.preds_info, self.parent)
+
+        # Figure out which model file to use
+        for model_fn in self.TEST_MODELS:
+            try:
+                if model_fn.endswith(".skops"):
+                    model = load(model_fn)
+                else:
+                    model = torch.load(model_fn)
+                break
+            except:
+                pass
+        self.TEST_MODEL = model_fn
 
     def test_setup(self):
         # Test that everything is checked properly at startup
@@ -74,6 +92,12 @@ class TestPrediction(unittest.TestCase):
         self.ui.cbox_model.setChecked(1)
         self.ui.check()
         self.assertEqual(self.parent.predicted, 1)
+
+        if self.TEST_MODEL.endswith(".skops"):
+            model = load(self.TEST_MODEL)
+        else:
+            model = torch.load(self.TEST_MODEL)
+
         preds = torch.load(self.TEST_MODEL).predict(torch.load(self.TEST_DATA))
         preds = np.array(preds)
         for x, y in zip(self.preds_info.preds_to_plot, preds):
