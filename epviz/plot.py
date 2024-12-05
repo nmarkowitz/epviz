@@ -197,57 +197,57 @@ class MainPage(QMainWindow):
         grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
         ud += 1
 
-
-        # EPOCHING
-        grid_lt.addWidget(QLabel("Full Recording", self), ud, 0)
-        self.epoch_checkbox = QCheckBox(self)
-        self.epoch_checkbox.setChecked(True)
-        grid_lt.addWidget(self.epoch_checkbox, ud, 1)
-        ud += 1
-
-
-        # Number of windows for epoching
-        n_windows_label = QLabel("Number of Windows", self)
-        n_windows_label.setMaximumWidth(150)
-        grid_lt.addWidget(n_windows_label, ud, 0)
-        self.epoch_n_windows = QLineEdit(self)
-        self.epoch_n_windows.setWhatsThis("Number of windows to pad annotation with")
-        self.epoch_n_windows.setFixedWidth(100)
-        self.epoch_n_windows.setValidator(QIntValidator())  # Only allows integer input
-        grid_lt.addWidget(self.epoch_n_windows, ud, 1)
-        ud += 1
-
-        # Length of windows for epoching
-        epoch_dur_label = QLabel("Duration of window (s)", self)
-        epoch_dur_label.setMaximumWidth(150)
-        grid_lt.addWidget(epoch_dur_label, ud, 0)
-        self.epoch_window_dur = QLineEdit(self)
-        self.epoch_window_dur.setFixedWidth(100)
-        self.epoch_window_dur.setValidator(QIntValidator())  # Only allows integer input
-        grid_lt.addWidget(self.epoch_window_dur, ud, 1)
-        ud += 1
-
-        # Button to select annotation
-        self.epoch_selector = QPushButton("Choose Annotations for Epochs", self)
-        grid_lt.addWidget(self.epoch_selector, ud, 0, 1, 2)
-        ud += 1
-
-        # Text displaying annotation chosen
-        self.ann_chosen_lbl_annot = QLabel("Annotation: NA", self)
-        grid_lt.addWidget(self.ann_chosen_lbl_annot, ud, 0, 1, 2)
-        ud += 1
-        self.ann_chosen_lbl_time = QLabel("Time (s): NA", self)
-        grid_lt.addWidget(self.ann_chosen_lbl_time, ud, 0, 1, 2)
-        ud += 1
-
-        # "Apply" button to toggle epoch settings
-        self.epoch_apply = QPushButton("Apply Epoch Settings", self)
-        grid_lt.addWidget(self.epoch_apply, ud, 0, 1, 2)
-        ud += 1
+        #
+        # # EPOCHING
+        # grid_lt.addWidget(QLabel("Full Recording", self), ud, 0)
+        # self.epoch_checkbox = QCheckBox(self)
+        # self.epoch_checkbox.setChecked(True)
+        # grid_lt.addWidget(self.epoch_checkbox, ud, 1)
+        # ud += 1
+        #
+        #
+        # # Number of windows for epoching
+        # n_windows_label = QLabel("Number of Windows", self)
+        # n_windows_label.setMaximumWidth(150)
+        # grid_lt.addWidget(n_windows_label, ud, 0)
+        # self.epoch_n_windows = QLineEdit(self)
+        # self.epoch_n_windows.setWhatsThis("Number of windows to pad annotation with")
+        # self.epoch_n_windows.setFixedWidth(100)
+        # self.epoch_n_windows.setValidator(QIntValidator())  # Only allows integer input
+        # grid_lt.addWidget(self.epoch_n_windows, ud, 1)
+        # ud += 1
+        #
+        # # Length of windows for epoching
+        # epoch_dur_label = QLabel("Duration of window (s)", self)
+        # epoch_dur_label.setMaximumWidth(150)
+        # grid_lt.addWidget(epoch_dur_label, ud, 0)
+        # self.epoch_window_dur = QLineEdit(self)
+        # self.epoch_window_dur.setFixedWidth(100)
+        # self.epoch_window_dur.setValidator(QIntValidator())  # Only allows integer input
+        # grid_lt.addWidget(self.epoch_window_dur, ud, 1)
+        # ud += 1
+        #
+        # # Button to select annotation
+        # self.epoch_selector = QPushButton("Choose Annotations for Epochs", self)
+        # grid_lt.addWidget(self.epoch_selector, ud, 0, 1, 2)
+        # ud += 1
+        #
+        # # Text displaying annotation chosen
+        # self.ann_chosen_lbl_annot = QLabel("Annotation: NA", self)
+        # grid_lt.addWidget(self.ann_chosen_lbl_annot, ud, 0, 1, 2)
+        # ud += 1
+        # self.ann_chosen_lbl_time = QLabel("Time (s): NA", self)
+        # grid_lt.addWidget(self.ann_chosen_lbl_time, ud, 0, 1, 2)
+        # ud += 1
+        #
+        # # "Apply" button to toggle epoch settings
+        # self.epoch_apply = QPushButton("Apply Epoch Settings", self)
+        # grid_lt.addWidget(self.epoch_apply, ud, 0, 1, 2)
+        # ud += 1
 
         # OTHER
-        grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
-        ud += 1
+        # grid_lt.addWidget(QHLine(), ud, 0, 1, 2)
+        # ud += 1
 
         #test11 = QLabel("", self)
         #grid_lt.addWidget(test11, ud, 0)
@@ -513,8 +513,8 @@ class MainPage(QMainWindow):
         self.button_amp_inc.clicked.connect(self.inc_amp)
         self.button_amp_dec.clicked.connect(self.dec_amp)
         self.ws_combobox.currentIndexChanged['int'].connect(self.chg_window_size)
-        self.epoch_selector.clicked.connect(self.change_epochs)
-        self.epoch_apply.clicked.connect(self.epoch_apply_callback)
+        #self.epoch_selector.clicked.connect(self.change_epochs)
+        #self.epoch_apply.clicked.connect(self.epoch_apply_callback)
         self.button_print.clicked.connect(self.print_graph)
         self.button_save_edf.clicked.connect(self.save_to_edf)
         self.btn_help.clicked.connect(self.open_help)

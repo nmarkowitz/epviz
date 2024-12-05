@@ -164,20 +164,20 @@ class PredictionInfo():
         if deepsoz_code_dir not in sys.path:
             sys.path.append(deepsoz_code_dir)
 
+        # Get params
+        input_model_params = self.dl_model_params
+        self.dl_model_params = ""
+        self.dl_model_params = op.join(deepsoz_model_params_dir, *input_model_params.split(os.sep)[1:])
+        params = torch.load(self.dl_model_params, map_location=torch.device('cpu'))
+
         # Set the model
         if self.dl_model == "txlstm_szpool":
             from txlstm_szpool import txlstm_szpool
-            input_model_params = self.dl_model_params
-            self.dl_model_params = ""
-            self.dl_model_params = op.join(deepsoz_model_params_dir, *input_model_params.split(os.sep)[1:])
             model = txlstm_szpool()
-            params = torch.load(self.dl_model_params, map_location=torch.device('cpu'))
             model.load_state_dict(params)
         elif self.dl_model == "cnn_blstm":
             from baselines import CNN_BLSTM
             model = CNN_BLSTM()
-            self.dl_model_params = op.join(deepsoz_model_params_dir, self.dl_model_params)
-            params = torch.load(self.dl_model_params, map_location=torch.device('cpu'))
             model.load_state_dict(params)
 
         # Format data properly: Resample to 200Hz and add zero padding if needed
@@ -227,7 +227,7 @@ class PredictionInfo():
         input_data_tensor = torch.tensor(reshaped_data).unsqueeze(0).unsqueeze(0)
 
         # Run model
-        model = model.double()
+        #model = model.double()
         model_output = model(input_data_tensor.float())
         model_output = torch.nn.functional.softmax(model_output[0], dim=-1)
         model_output = model_output[..., 1]
