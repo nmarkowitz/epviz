@@ -28,7 +28,7 @@ class ChannelOptions(QWidget):
         # if loading new data make copies in case user cancels loading channels
         self.new_load = 0
         if data.edf_fn != parent.ci.edf_fn:
-            self.pi = PredictionInfo()
+            self.pi = PredictionInfo(self.parent)
             self.new_load = 1
         else:
             self.pi = parent.pi

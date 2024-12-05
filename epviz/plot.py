@@ -563,7 +563,7 @@ class MainPage(QMainWindow):
         self.savetopo_win_open = 0 # whether or not the topoplots window is open
         self.stat_fs_band_win_open = 0 # whether or not the stat fs window is open
         self.max_time = 0  # number of seconds in the recording
-        self.pi = PredictionInfo()  # holds data needed to predict
+        self.pi = PredictionInfo(self)  # holds data needed to predict
         self.ci = ChannelInfo()  # holds channel information
         self.si = SpecInfo() # holds spectrogram information
         self.sii = SaveImgInfo() # holds info to save the img
@@ -1491,7 +1491,7 @@ class MainPage(QMainWindow):
                     self.rect_list.append(r1)
                 elif not self.pi.pred_by_chn and self.pi.multi_class:
                     r, g, b, a = self.pi.get_color(class_vals[k])
-                    brush = QBrush(QColor(r, g, b, a))
+                    brush = QBrush(QColor(int(r), int(g), int(b), int(a)))
                     r1 = pg.LinearRegionItem(values=(starts[k] - self.count * fs,
                                     ends[k] - self.count * fs),
                                     brush=brush, movable=False,

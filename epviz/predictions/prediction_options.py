@@ -267,7 +267,7 @@ class PredictionOptions(QWidget):
         self.parent.btn_topo.setText("Show topoplots")
         self.parent.topoplot_dock.hide()
         # if nothing is checked, then turn off predictions
-        if not self.cbox_model.isChecked() and not self.cbox_preds.isChecked():
+        if not self.cbox_model.isChecked() and not self.cbox_preds.isChecked() and not self.cbox_dl_models.isChecked():
             self.parent.predicted = 0
             self.close_window()
             self.parent.call_move_plot(0, 0, 0)
@@ -296,6 +296,22 @@ class PredictionOptions(QWidget):
                                     " of the samples in the .edf" +
                                     "file you loaded or are the incorrect shape." +
                                     " Please check your file.")
+
+        # If Deep Learning Checkbox is checked
+        if self.cbox_dl_models.isChecked():
+            if len(self.dl_model_selector.selected_model) == 0:
+                self.parent.throw_alert("Please select a model and parameters and set to epoch mode.")
+                #self.parent.predicted = 0
+                #self.close_window()
+                # return
+            else:
+                self.data.dl_model, self.data.dl_model_params = self.dl_model_selector.selected_model
+                self.data.preds_to_plot = self.data.run_dl_model()
+                self.parent.predicted = 1
+                self.data.data_loaded = 1
+                self.parent.pred_label.setText("Predictions plotted.")
+                self.parent.call_move_plot(0,0,0)
+                self.close_window()
         else:
             if self.data.ready:
                 preds_ret = self.data.predict(self.parent.max_time,

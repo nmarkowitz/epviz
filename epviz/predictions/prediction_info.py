@@ -1,11 +1,15 @@
 """ Holds the data needed for plotting """
 import torch
 import numpy as np
+import os.path as op
+import os
+import sys
 from epviz import models
 
 class PredictionInfo():
     """ Data structure for holding model and preprocessed data for prediction """
-    def __init__(self):
+    def __init__(self, parent):
+        self.parent = parent
         self.ready = 0 # whether both model and data have been loaded
         self.model = [] # loaded model
         self.is_dl_model = False
@@ -14,6 +18,8 @@ class PredictionInfo():
         self.preds = [] # loaded predictions
         self.preds_to_plot = [] # predictions that are to be plotted
                                 # preds should be of shape [n_preds, nchns] if multi-chn
+        self.dl_model = None # the deep learning model
+        self.dl_model_params = None # the parameters for the deep learning model
         self.model_fn = "" # name of the model file
         self.data_fn = "" # name of the data file
         self.preds_fn = "" # name of the loaded predictions file
@@ -143,6 +149,98 @@ class PredictionInfo():
 
         ret = self.check_preds_shape(preds, 1, max_time, fs, nchns, binary)
         return ret
+
+    def run_dl_model(self):
+        """ Runs the deep learning model on the data"""
+
+        if self.dl_model is None or self.dl_model_params is None:
+            return -1
+
+        epviz_dir = op.dirname(op.dirname(op.dirname(op.abspath(__file__))))
+        deepsoz_path = op.join(epviz_dir, "dl_models", "DeepSOZ")
+        deepsoz_code_dir = op.join(deepsoz_path, "code", "test")
+        deepsoz_model_params_dir = op.join(deepsoz_path, "final_models")
+
+        if deepsoz_code_dir not in sys.path:
+            sys.path.append(deepsoz_code_dir)
+
+        # Set the model
+        if self.dl_model == "txlstm_szpool":
+            from txlstm_szpool import txlstm_szpool
+            input_model_params = self.dl_model_params
+            self.dl_model_params = ""
+            self.dl_model_params = op.join(deepsoz_model_params_dir, *input_model_params.split(os.sep)[1:])
+            model = txlstm_szpool()
+            params = torch.load(self.dl_model_params, map_location=torch.device('cpu'))
+            model.load_state_dict(params)
+        elif self.dl_model == "cnn_blstm":
+            from baselines import CNN_BLSTM
+            model = CNN_BLSTM()
+            self.dl_model_params = op.join(deepsoz_model_params_dir, self.dl_model_params)
+            params = torch.load(self.dl_model_params, map_location=torch.device('cpu'))
+            model.load_state_dict(params)
+
+        # Format data properly: Resample to 200Hz and add zero padding if needed
+        edf_info = self.parent.edf_info
+        n_samples = edf_info.nsamples[0]
+        fs = int(edf_info.fs)
+
+        # Get data
+        start_idx = self.parent.count * int(fs)
+        stop_idx = (self.parent.count + 600) * int(fs)
+        if stop_idx > n_samples:
+            self.parent.throw_alert("Not enough data available! Set current time earlier to run the model.")
+            return
+
+        # Check if montage is average ref 1020
+        chns = self.parent.ci.labels_to_plot
+        if "Notes" in chns:
+            chns.pop(chns.index("Notes"))
+
+        ar1020_chns = self.parent.ci.labelsAR1020
+        bool_chns = [False] * len(chns)
+        for i, chn in enumerate(chns):
+            if chn in ar1020_chns:
+                bool_chns[i] = True
+        if not all(bool_chns):
+            self.parent.throw_alert("Model can only be run on 1020 average reference montage.")
+            return
+
+        # Finally retrieve the data
+        input_data = self.parent.ci.get_data(
+            self.parent.ci.list_of_chns,
+            self.parent,
+            self.parent.ci.mont_type,
+            start_idx=start_idx,
+            stop_idx=stop_idx)
+
+        # Resample
+        from scipy.signal import resample, resample_poly
+        new_fs = 200
+        new_num_samples = int(input_data.shape[1] * fs / new_fs)
+        #input_data = resample(input_data, new_num_samples, axis=1)
+        input_data = resample_poly(input_data, new_fs, fs, axis=1)
+
+        # Make into torch.tensor datatype to input into model
+        reshaped_data = input_data.reshape(input_data.shape[0], 600, 200)  # Shape: (19, 600, 200)
+        reshaped_data = np.transpose(reshaped_data, (1, 0, 2))  # Shape: (600, 19, 200)
+        input_data_tensor = torch.tensor(reshaped_data).unsqueeze(0).unsqueeze(0)
+
+        # Run model
+        model = model.double()
+        model_output = model(input_data_tensor.float())
+        model_output = torch.nn.functional.softmax(model_output[0], dim=-1)
+        model_output = model_output[..., 1]
+        model_output = model_output.squeeze().detach().numpy()
+
+        # Reshape to match data. Add zero padding to match original data size
+        n_samples_per_second = fs
+        model_output = model_output.repeat(n_samples_per_second)
+        output = np.zeros(n_samples)
+        output[start_idx:stop_idx] = model_output[:stop_idx - start_idx]
+
+        return output
+
 
     def check_preds_shape(self, preds, model_or_preds, max_time, fs, nchns, binary = True):
         """
