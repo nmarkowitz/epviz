@@ -239,6 +239,8 @@ class PredictionInfo():
         output = np.zeros(n_samples)
         output[start_idx:stop_idx] = model_output[:stop_idx - start_idx]
 
+        self.pred_width = 1
+
         return output
 
 

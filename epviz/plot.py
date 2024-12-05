@@ -1453,6 +1453,29 @@ class MainPage(QMainWindow):
             blue_brush = QBrush(QColor(38,233,254,50))
             starts, ends, chns, class_vals = self.pi.compute_starts_ends_chns(self.thresh,
                                         self.count, self.window_size, fs, nchns)
+
+            # Bunch start and ends together
+            if len(starts) > 0:
+                merged_starts = [starts[0]]
+                merged_ends = []
+
+                # Iterate through the starts and ends
+                for i in range(1, len(starts)):
+                    # If the current start is equal to the last end, extend the interval
+                    if starts[i] == ends[i - 1]:
+                        continue
+                    else:
+                        # Otherwise, close the current interval and start a new one
+                        merged_ends.append(ends[i - 1])
+                        merged_starts.append(starts[i])
+
+                # Add the final end
+                merged_ends.append(ends[-1])
+
+                starts = merged_starts
+                ends = merged_ends
+
+
             for k in range(len(starts)):
                 if self.pi.pred_by_chn and not self.pi.multi_class:
                     for i in range(nchns):
